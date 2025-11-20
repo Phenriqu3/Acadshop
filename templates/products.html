@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+
+{% block title %}AcadShop - Produtos{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5" style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="text-center mb-5">
+                    <h1 class="display-4 fw-bold" style="color: #d4af37;">Produtos</h1>
+                    <p class="lead" style="color: #666666;">Nossa coleção completa de produtos</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Filters Sidebar -->
+            <div class="col-lg-3 mb-4">
+                <div class="card shadow-sm" style="background: #ffffff; border: 1px solid #e9ecef; border-radius: 8px;">
+                    <div class="card-body" style="background: #f8f9fa; border-radius: 8px;">
+                        <h5 class="card-title mb-4" style="color: #d4af37;">Filtros</h5>
+
+                        <!-- Categories Filter -->
+                        <div class="mb-4">
+                            <h6 class="fw-semibold mb-3" style="color: #000000;">Categorias</h6>
+                            <div class="category-list">
+                                {% for category in categories %}
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input category-filter" type="checkbox" value="{{ category.slug }}" onchange="applyFilters()">
+                                    <label class="form-check-label" for="category-{{ category.id }}" style="color: #333333;">
+                                        {{ category.name }} <span class="text-muted">({{ category.product_count or 0 }})</span>
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Price Range Filter -->
+                        <div class="mb-4">
+                            <h6 class="fw-semibold mb-3" style="color: #000000;">Faixa de Preço</h6>
+                            <div class="input-group mb-2">
+                                <span class="input-group-text" style="background: #f8f9fa; border-color: #e9ecef; color: #666666;">R$</span>
+                                <input type="number" class="form-control" id="priceMin" placeholder="0" min="0" style="border-color: #e9ecef;">
+                            </div>
+                            <div class="input-group mb-2">
+                                <span class="input-group-text" style="background: #f8f9fa; border-color: #e9ecef; color: #666666;">R$</span>
+                                <input type="number" class="form-control" id="priceMax" placeholder="1000" min="0" style="border-color: #e9ecef;">
+                            </div>
+                            <button class="btn btn-outline-primary btn-sm w-100" onclick="applyFilters()" style="border-color: #000000; color: #000000;">
+                                <i class="fas fa-filter me-1"></i>Aplicar Filtro
+                            </button>
+                        </div>
+
+                        <!-- Clear Filters -->
+                        <div>
+                            <button class="btn btn-outline-secondary btn-sm w-100" onclick="clearFilters()" style="border-color: #666666; color: #666666;">
+                                <i class="fas fa-times me-2"></i>Limpar Filtros
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Products Grid -->
+            <div class="col-lg-9">
+                <!-- Search and Sort Bar -->
+                <div class="card shadow-sm mb-4" style="background: #ffffff; border: 1px solid #e9ecef; border-radius: 8px;">
+                    <div class="card-body">
+                        <div class="row g-3 align-items-center">
+                            <div class="col-md-8">
+                                <div class="input-group">
+                                    <input type="text" id="searchInput" class="form-control"
+                                           placeholder="Buscar produtos..." value="" style="border-color: #e9ecef;">
+                                    <button class="btn" onclick="applyFilters()" style="background: #000000; border-color: #000000; color: #ffffff;">
+                                        <i class="fas fa-search me-2"></i>Buscar
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select" id="sortSelect" onchange="sortProducts(this.value)" style="border-color: #e9ecef;">
+                                    <option value="">Ordenar por...</option>
+                                    <option value="name_asc">Nome A-Z</option>
+                                    <option value="price_asc">Preço Menor</option>
+                                    <option value="price_desc">Preço Maior</option>
+                                    <option value="newest">Mais Recentes</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h5 id="resultsHeader" style="color: #000000;">
+                            Todos os Produtos
+                            <span class="badge ms-2" style="background: #d4af37; color: #000000;" id="resultsCount">{{ products|length }}</span>
+                        </h5>
+                    </div>
+                </div>
+
+                <!-- Products Container -->
+                <div>
+                    {% if products %}
+                    <div class="row g-4" id="productsGrid">
+                        {% for product in products %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 product-card"
+                                 data-category="{{ product.category.slug }}"
+                                 data-price="{{ product.price }}"
+                                 data-name="{{ product.name.lower() }}"
+                                 style="background: #ffffff; border: 1px solid #e9ecef; border-radius: 8px; transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                <a href="{{ url_for('product_detail', slug=product.slug) }}" class="text-decoration-none">
+                                    {% set image_list = product.images.split(',') if product.images else [product.image] %}
+                                    <img src="{{ image_list[0] if image_list[0] else 'https://via.placeholder.com/300x280?text=Produto' }}" class="card-img-top" alt="{{ product.name }}" style="border-radius: 8px 8px 0 0;">
+                                    <div class="card-body d-flex flex-column">
+                                        <h6 class="card-title" style="color: #000000; font-weight: 600;">{{ product.name }}</h6>
+                                        <span class="badge mb-2" style="background: #f8f9fa; color: #666666;">{{ product.category.name }}</span>
+                                        <div class="mt-auto">
+                                            <p class="card-text mb-1 fw-bold" style="color: #d4af37;">R$ {{ "%.2f"|format(product.price) }}</p>
+                                            {% if product.old_price %}
+                                            <p class="card-text" style="color: #999999; text-decoration: line-through;">R$ {{ "%.2f"|format(product.old_price) }}</p>
+                                            {% endif %}
+                                            <div style="color: #ffaa00;">★★★★☆</div>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if products|length > 12 %}
+                    <nav aria-label="Products pagination" class="mt-5">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" style="color: #666666; border-color: #e9ecef;">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item active">
+                                <a class="page-link" href="#" style="background: #d4af37; border-color: #d4af37; color: #000000;">1</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#" style="color: #000000; border-color: #e9ecef;">2</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#" style="color: #000000; border-color: #e9ecef;">3</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#" style="color: #666666; border-color: #e9ecef;">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                    {% endif %}
+
+                    {% else %}
+                    <!-- Empty State -->
+                    <div class="text-center py-5" id="emptyState" style="display: none;">
+                        <h4 style="color: #000000;">Nenhum produto encontrado</h4>
+                        <p style="color: #666666;">Tente ajustar os filtros ou termos de busca para encontrar o que procura.</p>
+                        <a href="{{ url_for('products_page') }}" class="btn" style="background: #000000; border-color: #000000; color: #ffffff;">
+                            <i class="fas fa-store me-2"></i>Ver Todos os Produtos
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Client-side filtering and search functions
+function applyFilters() {
+    const selectedCategories = Array.from(document.querySelectorAll('.category-filter:checked')).map(cb => cb.value);
+    const minPrice = parseFloat(document.getElementById('priceMin').value) || 0;
+    const maxPrice = parseFloat(document.getElementById('priceMax').value) || Infinity;
+    const searchQuery = document.getElementById('searchInput').value.toLowerCase().trim();
+
+    const productCards = document.querySelectorAll('.product-card');
+    let visibleCount = 0;
+
+    productCards.forEach(card => {
+        const category = card.dataset.category;
+        const price = parseFloat(card.dataset.price);
+        const name = card.dataset.name;
+
+        const categoryMatch = selectedCategories.length === 0 || selectedCategories.includes(category);
+        const priceMatch = price >= minPrice && price <= maxPrice;
+        const searchMatch = !searchQuery || name.includes(searchQuery);
+
+        if (categoryMatch && priceMatch && searchMatch) {
+            card.parentElement.style.display = 'block';
+            visibleCount++;
+        } else {
+            card.parentElement.style.display = 'none';
+        }
+    });
+
+    // Update results count and header
+    const resultsCount = document.getElementById('resultsCount');
+    const resultsHeader = document.getElementById('resultsHeader');
+    const emptyState = document.getElementById('emptyState');
+
+    if (resultsCount) {
+        resultsCount.textContent = visibleCount;
+    }
+
+    if (resultsHeader) {
+        if (searchQuery) {
+            resultsHeader.innerHTML = `Resultados para "${searchQuery}" <span class="badge ms-2" style="background: #d4af37; color: #000000;">${visibleCount}</span>`;
+        } else if (selectedCategories.length > 0) {
+            resultsHeader.innerHTML = `Produtos filtrados <span class="badge ms-2" style="background: #d4af37; color: #000000;">${visibleCount}</span>`;
+        } else {
+            resultsHeader.innerHTML = `Todos os Produtos <span class="badge ms-2" style="background: #d4af37; color: #000000;">${visibleCount}</span>`;
+        }
+    }
+
+    // Show/hide empty state
+    if (emptyState) {
+        if (visibleCount === 0) {
+            emptyState.style.display = 'block';
+        } else {
+            emptyState.style.display = 'none';
+        }
+    }
+}
+
+function clearFilters() {
+    // Clear checkboxes
+    document.querySelectorAll('.category-filter').forEach(cb => cb.checked = false);
+
+    // Clear price inputs
+    document.getElementById('priceMin').value = '';
+    document.getElementById('priceMax').value = '';
+
+    // Clear search
+    document.getElementById('searchInput').value = '';
+
+    // Reset sort
+    document.getElementById('sortSelect').value = '';
+
+    // Apply cleared filters
+    applyFilters();
+}
+
+// Sort functions (client-side)
+function sortProducts(sortValue) {
+    const container = document.getElementById('productsGrid');
+    const cards = Array.from(container.querySelectorAll('.product-card'));
+
+    cards.sort((a, b) => {
+        const aPrice = parseFloat(a.dataset.price);
+        const bPrice = parseFloat(b.dataset.price);
+        const aName = a.dataset.name;
+        const bName = b.dataset.name;
+
+        switch (sortValue) {
+            case 'name_asc':
+                return aName.localeCompare(bName);
+            case 'price_asc':
+                return aPrice - bPrice;
+            case 'price_desc':
+                return bPrice - aPrice;
+            case 'newest':
+            default:
+                return 0; // Keep original order for newest
+        }
+    });
+
+    // Re-append sorted cards
+    cards.forEach(card => container.appendChild(card.parentElement));
+}
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Add event listeners for real-time filtering
+    document.getElementById('searchInput').addEventListener('input', applyFilters);
+    document.getElementById('priceMin').addEventListener('input', applyFilters);
+    document.getElementById('priceMax').addEventListener('input', applyFilters);
+
+    // Initial filter application
+    applyFilters();
+});
+</script>
+{% endblock %}

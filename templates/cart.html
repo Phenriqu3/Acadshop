@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}AcadShop - Carrinho{% endblock %}
+
+{% block content %}
+<style>
+.quantity-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+.quantity-btn {
+    width: 30px;
+    height: 30px;
+    border: 1px solid #6c757d;
+    background: #f8f9fa;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.2s, color 0.2s;
+}
+.quantity-btn:hover {
+    background: #6c757d;
+    color: white;
+}
+.quantity-input {
+    width: 60px;
+    text-align: center;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 0.25rem;
+}
+</style>
+<div class="container py-5">
+    <h1 class="mb-4">Seu Carrinho</h1>
+
+    <div id="cartContainer">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Produto</th>
+                        <th>Preço</th>
+                        <th>Quantidade</th>
+                        <th>Subtotal</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="cartItemsBody">
+                    {% for item in items %}
+                    <tr data-cart-item-id="{{ item.id }}">
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                <img src="{{ item.image if item.image else url_for('static', filename='images/default.jpg') }}" alt="{{ item.name }}" style="width: 80px; height: 80px; object-fit: cover;">
+                                <div>
+                                    <strong>{{ item.name }}</strong>
+                                    {% if item.selected_options %}
+                                    <div class="text-primary fw-bold">{{ item.selected_options }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>R$ {{ "%.2f"|format(item.price) }}</td>
+                        <td style="width:150px;">
+                            <div class="quantity-controls">
+                                <button class="quantity-btn" onclick="changeQty({{ item.id }}, -1)">-</button>
+                                <input type="number" id="qty-{{ item.id }}" class="quantity-input" value="{{ item.quantity }}" min="1" onchange="updateQty({{ item.id }})">
+                                <button class="quantity-btn" onclick="changeQty({{ item.id }}, 1)">+</button>
+                            </div>
+                        </td>
+                        <td class="fw-bold">R$ {{ "%.2f"|format(item.subtotal) }}</td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="removeItem({{ item.id }})"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <a href="/produtos" class="btn btn-outline-primary"><i class="fas fa-arrow-left me-2"></i>Continuar Comprando</a>
+            <div class="text-end">
+                <div class="mb-2">Itens: <strong id="summaryItems">{{ items|length }}</strong></div>
+                <div class="mb-3">Total: <strong id="summaryPrice">R$ {{ "%.2f"|format(total_price) }}</strong></div>
+                <button class="btn btn-success btn-lg" onclick="checkout()" id="checkoutBtn"><i class="fas fa-check me-2"></i>Finalizar Compra</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty cart fallback -->
+    <div id="emptyCart" class="text-center py-5" style="display: none;">
+        <i class="fas fa-shopping-cart fa-4x text-muted mb-3"></i>
+        <h3>Seu carrinho está vazio</h3>
+        <p class="text-muted">Adicione produtos para finalizar a compra.</p>
+        <a href="/produtos" class="btn btn-primary">Ver Produtos</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function fetchCart() {
+    const res = await fetch('/api/cart');
+    const data = await res.json();
+    return data;
+}
+
+function updateSummaryDom(total_items, total_price) {
+    document.getElementById('summaryItems').textContent = total_items;
+    document.getElementById('summaryPrice').textContent = 'R$ ' + total_price.toFixed(2);
+    const badge = document.getElementById('cartBadge');
+    if (badge) {
+        if (total_items > 0) {
+            badge.style.display = 'inline';
+            badge.textContent = total_items;
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+}
+
+function showEmptyIfNeeded() {
+    const tbody = document.getElementById('cartItemsBody');
+    if (!tbody || tbody.children.length === 0) {
+        document.getElementById('cartContainer').style.display = 'none';
+        document.getElementById('emptyCart').style.display = 'block';
+    } else {
+        document.getElementById('cartContainer').style.display = 'block';
+        document.getElementById('emptyCart').style.display = 'none';
+    }
+}
+
+async function changeQty(cartItemId, delta) {
+    const input = document.getElementById('qty-' + cartItemId);
+    let qty = parseInt(input.value) || 1;
+    qty += delta;
+    if (qty < 1) qty = 1;
+    input.value = qty;
+
+    await updateQty(cartItemId);
+}
+
+async function updateQty(cartItemId) {
+    const input = document.getElementById('qty-' + cartItemId);
+    const qty = parseInt(input.value) || 1;
+
+    const res = await fetch('/api/cart/update', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({cart_item_id: cartItemId, quantity: qty})
+    });
+    const data = await res.json();
+    if (data.success) {
+        // Atualizar subtotal na linha
+        const row = document.querySelector(`tr[data-cart-item-id='${cartItemId}']`);
+        if (row) {
+            const price = parseFloat(row.querySelector('td:nth-child(2)').textContent.replace('R$ ', '').replace(',', '.'));
+            const subtotal = (price * qty).toFixed(2);
+            row.querySelector('.subtotal').textContent = 'R$ ' + subtotal.replace('.', ',');
+        }
+        // Atualizar totais
+        updateSummaryDom(data.total_items, data.total_price);
+    } else {
+        alert(data.error || 'Erro ao atualizar carrinho');
+    }
+}
+
+async function removeItem(cartItemId) {
+    const res = await fetch('/api/cart/remove', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({cart_item_id: cartItemId})
+    });
+    const data = await res.json();
+    if (data.success) {
+        // remover linha da tabela
+        const row = document.querySelector(`tr[data-cart-item-id='${cartItemId}']`);
+        if (row) row.remove();
+        updateSummaryDom(data.total_items, data.total_price);
+        showEmptyIfNeeded();
+    } else {
+        alert(data.error || 'Erro ao remover item');
+    }
+}
+
+async function refreshCart() {
+    const data = await fetchCart();
+    // Atualiza DOM (subtotal e total)
+    const tbody = document.getElementById('cartItemsBody');
+    tbody.innerHTML = '';
+    data.items.forEach(it => {
+        const subtotal = (it.price * it.quantity).toFixed(2);
+        const row = document.createElement('tr');
+        row.setAttribute('data-cart-item-id', it.cart_item_id);
+        row.innerHTML = `
+            <td>
+                <div class="d-flex align-items-center gap-3">
+                    <img src="${it.image || 'https://via.placeholder.com/80'}" alt="${it.name}" style="width:80px; height:80px; object-fit:cover;">
+                    <div>
+                        <strong>${it.name}</strong>
+                        ${it.selected_options ? `<div class="text-primary fw-bold">${it.selected_options}</div>` : ''}
+                    </div>
+                </div>
+            </td>
+            <td>R$ ${it.price.toFixed(2)}</td>
+            <td style="width:150px;">
+                <div class="cart-quantity-controls">
+                    <button class="cart-quantity-btn" onclick="changeQty(${it.cart_item_id}, -1)">-</button>
+                    <input type="number" id="qty-${it.cart_item_id}" class="cart-quantity-input" value="${it.quantity}" min="1" onchange="updateQty(${it.cart_item_id})">
+                    <button class="cart-quantity-btn" onclick="changeQty(${it.cart_item_id}, 1)">+</button>
+                </div>
+            </td>
+            <td class="subtotal fw-bold">R$ ${subtotal}</td>
+            <td>
+                <button class="btn btn-outline-danger btn-sm" onclick="removeItem(${it.cart_item_id})"><i class="fas fa-trash"></i></button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    updateSummaryDom(data.total_items, parseFloat(data.total_price || 0));
+    showEmptyIfNeeded();
+}
+
+async function checkout() {
+    // Redirecionar para a página de checkout
+    window.location.href = '/checkout';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    fetchCart().then(data => {
+        updateSummaryDom(data.total_items, data.total_price);
+    });
+    refreshCart();
+});
+</script>
+{% endblock %}

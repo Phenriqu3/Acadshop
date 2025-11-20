@@ -1,0 +1,708 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AcadShop - Moda e Estilo{% endblock %}</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modern_design.css') }}">
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark shadow-lg position-sticky top-0" style="background: black; z-index: 1030;">
+        <div class="container-fluid px-4">
+            <!-- Logo -->
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="{{ url_for('index') }}">
+                <div class="logo-container me-3">
+                    <div class="logo-icon">
+            <i class="fas fa-crown text-white"></i>
+                    </div>
+                    <div class="logo-accent"></div>
+                </div>
+                <span class="brand-text">AcadShop</span>
+            </a>
+
+            <!-- Mobile Toggle -->
+            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <!-- Navigation Links -->
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item mx-1">
+                        <a class="nav-link px-3 py-2 rounded-pill hover-effect" href="{{ url_for('index') }}">
+                            <i class="fas fa-home me-2"></i>Início
+                        </a>
+                    </li>
+                    <li class="nav-item mx-1">
+                        <a class="nav-link px-3 py-2 rounded-pill hover-effect" href="{{ url_for('products_page') }}">
+                            <i class="fas fa-store me-2"></i>Produtos
+                        </a>
+                    </li>
+
+                    {% if current_user.is_authenticated and current_user.is_admin %}
+                    <li class="nav-item dropdown mx-1">
+                        <a class="nav-link dropdown-toggle px-3 py-2 rounded-pill hover-effect" href="#" id="adminMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-shield me-2"></i>Admin
+                        </a>
+                        <ul class="dropdown-menu shadow-lg border-0 mt-2">
+                            <li>
+                                <a class="dropdown-item py-3 px-4" href="{{ url_for('admin_dashboard') }}">
+                                    <i class="fas fa-cogs me-3 text-primary"></i>
+                                    <div>
+                                        <div class="fw-semibold">Painel Admin</div>
+                                        <small class="text-muted">Gerenciar produtos</small>
+                                    </div>
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item py-3 px-4" href="{{ url_for('add_product') }}">
+                                    <i class="fas fa-plus-circle me-3 text-success"></i>
+                                    <div>
+                                        <div class="fw-semibold">Adicionar Produto</div>
+                                        <small class="text-muted">Novo item no catálogo</small>
+                                    </div>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item mx-1">
+                        <a class="nav-link px-3 py-2 rounded-pill hover-effect" href="{{ url_for('admin_login') }}">
+                            <i class="fas fa-user-shield me-2"></i>Admin
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <!-- Categories Dropdown -->
+                    <li class="nav-item dropdown mx-1">
+                        <a class="nav-link dropdown-toggle px-3 py-2 rounded-pill hover-effect" href="#" id="categoriesMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-th-large me-2"></i>Categorias
+                        </a>
+                        <ul class="dropdown-menu shadow-lg border-0 mt-2">
+                            {% for category in categories %}
+                            <li>
+                                <a class="dropdown-item py-2 px-4" href="{{ url_for('products_page', categories=category.slug) }}">
+                                    <i class="fas fa-tag me-3 text-primary"></i>{{ category.name }}
+                                </a>
+                            </li>
+                            {% if not loop.last %}<li><hr class="dropdown-divider"></li>{% endif %}
+                            {% endfor %}
+                        </ul>
+                    </li>
+                </ul>
+
+                <!-- Right Side Actions -->
+                <div class="d-flex align-items-center">
+                    <!-- Search Bar (Desktop) -->
+                    <div class="d-none d-lg-block me-3">
+                        <form action="{{ url_for('products_page') }}" method="GET" class="input-group">
+                            <input type="text" name="search" class="form-control form-control-sm border-0 bg-white bg-opacity-10 text-white" placeholder="Buscar produtos..." style="border-radius: 20px 0 0 20px;">
+                            <button class="btn btn-sm border-0 bg-white bg-opacity-10 text-white" type="submit" style="border-radius: 0 20px 20px 0;">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Cart Button -->
+                    <button class="btn btn-link nav-link position-relative me-3 p-3 rounded-circle hover-cart" onclick="toggleCartSidebar()" title="Carrinho de Compras">
+                        <i class="fas fa-shopping-cart text-white"></i>
+                    </button>
+                    <span id="cartBadge" class="badge bg-danger position-absolute top-50% start-100 translate-middle-y rounded-pill fw-bold" style="display: none; font-size: 0.5rem; min-width: 14px; height: 14px; line-height: 1;">0</span>
+
+                    <!-- User Menu -->
+                    {% if current_user.is_authenticated %}
+                        <div class="dropdown">
+                            <button class="btn btn-outline-light dropdown-toggle d-flex align-items-center px-3 py-2 rounded-pill" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                                {% if current_user.profile_picture %}
+                                    <img src="{{ url_for('static', filename=current_user.profile_picture) }}" alt="Profile" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                                {% else %}
+                                    <div class="bg-white bg-opacity-20 rounded-circle p-1 me-2">
+                                        <i class="fas fa-user text-white"></i>
+                                    </div>
+                                {% endif %}
+                                <span class="d-none d-lg-inline">{{ current_user.username }}</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2">
+                                <li class="px-3 py-2 border-bottom">
+                                    <small class="text-muted">Bem-vindo de volta!</small>
+                                </li>
+                                <li><a class="dropdown-item py-3 px-4" href="{{ url_for('cart_page') }}">
+                                    <i class="fas fa-shopping-cart me-3 text-primary"></i>Meu Carrinho
+                                </a></li>
+                                <li><a class="dropdown-item py-3 px-4" href="{{ url_for('checkout_page') }}">
+                                    <i class="fas fa-credit-card me-3 text-success"></i>Finalizar Compra
+                                </a></li>
+                                <li><a class="dropdown-item py-3 px-4" href="{{ url_for('profile') }}">
+                                    <i class="fas fa-user me-3 text-info"></i>Meu Perfil
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item py-3 px-4 text-danger" href="{{ url_for('logout') }}">
+                                    <i class="fas fa-sign-out-alt me-3"></i>Sair
+                                </a></li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <div class="d-flex gap-2">
+                            <a href="{{ url_for('login') }}" class="btn btn-outline-light px-3 py-2 rounded-pill">
+                                <i class="fas fa-sign-in-alt me-2"></i>Entrar
+                            </a>
+                            <a href="{{ url_for('register') }}" class="btn btn-light px-3 py-2 rounded-pill fw-semibold">
+                                <i class="fas fa-user-plus me-2"></i>Cadastrar
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Search Bar -->
+        <div class="d-lg-none px-3 pb-2">
+            <form action="{{ url_for('products_page') }}" method="GET" class="input-group">
+                <input type="text" name="search" class="form-control form-control-sm border-0 bg-white bg-opacity-10 text-white" placeholder="Buscar produtos..." style="border-radius: 20px 0 0 20px;">
+                <button class="btn btn-sm border-0 bg-white bg-opacity-10 text-white" type="submit" style="border-radius: 0 20px 20px 0;">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+        </div>
+    </nav>
+
+    <!-- Conteúdo -->
+    <main class="flex-grow-1">
+        {% block content %}{% endblock %}
+    </main>
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+    /* Custom navbar styles */
+    .navbar-brand:hover .bg-warning {
+        background-color: rgba(255, 215, 0, 0.3) !important;
+        transform: scale(1.05);
+        transition: all 0.3s ease;
+    }
+
+    .hover-effect {
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .hover-effect:hover {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .hover-cart:hover {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        transform: scale(1.1);
+        transition: all 0.3s ease;
+    }
+
+    .dropdown-menu {
+        animation: fadeInDown 0.3s ease-out;
+    }
+
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Mobile improvements */
+    @media (max-width: 991.98px) {
+        .navbar-collapse {
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 0 0 10px 10px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .nav-link {
+            padding: 0.75rem 1rem !important;
+            margin: 0.25rem 0;
+            border-radius: 8px;
+        }
+
+        .navbar-toggler {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+        }
+    }
+
+    /* Search bar focus effects */
+    .input-group input:focus {
+        background-color: rgba(255, 255, 255, 0.15) !important;
+        border-color: rgba(255, 255, 255, 0.5) !important;
+        box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25);
+    }
+
+    .input-group button:hover {
+        background-color: rgba(255, 255, 255, 0.2) !important;
+    }
+    </style>
+
+    <!-- Cart Sidebar Modern Styles -->
+    <style>
+    .cart-overlay {
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
+    }
+
+    .cart-sidebar {
+        background: white;
+        color: black;
+        border-radius: 15px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        border: 2px solid black; /* Black border */
+        max-width: 400px;
+        height: 100vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .cart-header {
+        background: black;
+        color: white;
+        padding: 1.5rem;
+        border-bottom: 2px solid black; /* Black border */
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .cart-header h5 {
+        margin: 0;
+        font-weight: 600;
+        font-size: 1.25rem;
+    }
+
+    .cart-header .btn-close {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.5rem;
+        cursor: pointer;
+    }
+
+    .cart-body {
+        flex: 1;
+        padding: 1.5rem;
+        overflow-y: auto;
+        background: #f8f9fa; /* Light gray background */
+    }
+
+    .cart-item {
+        display: flex;
+        align-items: center;
+        background: white;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e9ecef;
+    }
+
+    .cart-item-img {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-right: 1rem;
+    }
+
+    .cart-item-details {
+        flex: 1;
+    }
+
+    .cart-item-name {
+        font-weight: 600;
+        font-size: 1rem;
+        margin-bottom: 0.25rem;
+        color: black;
+    }
+
+    .cart-item-description {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-bottom: 0.5rem;
+    }
+
+    .cart-item-price {
+        font-weight: 700;
+        color: #FFD700; /* Gold */
+        font-size: 1rem;
+    }
+
+    .cart-item-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .cart-quantity-btn {
+        background: black;
+        color: white;
+        border: 1px solid #FFD700;
+        border-radius: 5px;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-weight: bold;
+        transition: background 0.3s;
+    }
+
+    .cart-quantity-btn:hover {
+        background: #FFD700;
+        color: black;
+    }
+
+    .cart-quantity-display {
+        font-weight: 600;
+        min-width: 30px;
+        text-align: center;
+    }
+
+    .cart-remove-btn {
+        background: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+
+    .cart-remove-btn:hover {
+        background: #c82333;
+    }
+
+    .cart-footer {
+        background: white;
+        padding: 1.5rem;
+        border-top: 2px solid #FFD700;
+    }
+
+    .cart-total {
+        margin-bottom: 1.5rem;
+    }
+
+    .cart-subtotal, .cart-total-final {
+        display: flex;
+        justify-content: space-between;
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .cart-subtotal span:first-child, .cart-total-final span:first-child {
+        font-weight: 500;
+        color: #6c757d;
+    }
+
+    .cart-subtotal span:last-child, .cart-total-final span:last-child {
+        font-weight: 700;
+        color: black;
+    }
+
+    .cart-total-final {
+        border-top: 1px solid #e9ecef;
+        padding-top: 0.5rem;
+        font-size: 1.1rem;
+        color: #FFD700; /* Gold for total */
+    }
+
+    .cart-footer .btn {
+        border-radius: 8px;
+        font-weight: 600;
+        padding: 0.75rem 1.5rem;
+        transition: all 0.3s;
+    }
+
+    .cart-footer .btn-primary {
+        background: black;
+        border: 2px solid #FFD700;
+        color: white;
+    }
+
+    .cart-footer .btn-primary:hover {
+        background: #FFD700;
+        color: black;
+        border-color: black;
+    }
+
+    .cart-footer .btn-outline-secondary {
+        border: 2px solid black;
+        color: black;
+    }
+
+    .cart-footer .btn-outline-secondary:hover {
+        background: black;
+        color: white;
+    }
+    </style>
+
+    <script>
+    // Funções para controlar a barra lateral do carrinho
+    function toggleCartSidebar() {
+        const sidebar = document.getElementById('cartSidebar');
+        const overlay = document.getElementById('cartOverlay');
+
+        if (sidebar.classList.contains('active')) {
+            closeCartSidebar();
+        } else {
+            openCartSidebar();
+        }
+    }
+
+    function openCartSidebar() {
+        const sidebar = document.getElementById('cartSidebar');
+        const overlay = document.getElementById('cartOverlay');
+
+        sidebar.classList.add('active');
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+
+        updateCartSidebar();
+    }
+
+    function closeCartSidebar() {
+        const sidebar = document.getElementById('cartSidebar');
+        const overlay = document.getElementById('cartOverlay');
+
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    // Atualizar conteúdo da barra lateral do carrinho
+    async function updateCartSidebar() {
+        try {
+            const res = await fetch('/api/cart');
+            if (!res.ok) {
+                // Se não estiver logado, mostra mensagem
+                const cartItemsDiv = document.getElementById('cartItems');
+                const cartSubtotalSpan = document.getElementById('cartSubtotal');
+                const cartTotalSpan = document.getElementById('cartTotal');
+                cartItemsDiv.innerHTML = '<p class="text-muted">Faça login para ver o carrinho</p>';
+                cartSubtotalSpan.textContent = 'R$ 0.00';
+                cartTotalSpan.textContent = 'R$ 0.00';
+                return;
+            }
+            const data = await res.json();
+
+            const cartItemsDiv = document.getElementById('cartItems');
+            const cartSubtotalSpan = document.getElementById('cartSubtotal');
+            const cartTotalSpan = document.getElementById('cartTotal');
+
+            if (data.items && data.items.length > 0) {
+                let itemsHtml = '';
+                let subtotal = 0;
+
+                data.items.forEach(item => {
+                    const itemSubtotal = item.price * item.quantity;
+                    subtotal += itemSubtotal;
+
+                    itemsHtml += `
+                        <div class="cart-item">
+                            <img src="${item.image || 'https://via.placeholder.com/60x60?text=Produto'}" alt="${item.name}" class="cart-item-img">
+                            <div class="cart-item-details">
+                                <div class="cart-item-name">${item.name}${item.size ? ` (${item.size})` : ''}</div>
+                                <div class="cart-item-description">${item.short_description || 'Sem descrição'}</div>
+                                <div class="cart-item-price">R$ ${item.price.toFixed(2).replace('.', ',')}</div>
+                                <div class="cart-item-controls">
+                                    <button class="cart-quantity-btn" onclick="updateCartItem(${item.cart_item_id}, ${item.quantity - 1})">-</button>
+                                    <span class="cart-quantity-display">${item.quantity}</span>
+                                    <button class="cart-quantity-btn" onclick="updateCartItem(${item.cart_item_id}, ${item.quantity + 1})">+</button>
+                                    <button class="cart-remove-btn" onclick="removeCartItem(${item.cart_item_id})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                cartItemsDiv.innerHTML = itemsHtml;
+                cartSubtotalSpan.textContent = `R$ ${subtotal.toFixed(2).replace('.', ',')}`;
+                cartTotalSpan.textContent = `R$ ${data.total_price.toFixed(2).replace('.', ',')}`;
+            } else {
+                cartItemsDiv.innerHTML = '<p class="text-muted">Carrinho vazio</p>';
+                cartSubtotalSpan.textContent = 'R$ 0.00';
+                cartTotalSpan.textContent = 'R$ 0.00';
+            }
+        } catch (err) {
+            console.error('Erro ao atualizar sidebar do carrinho:', err);
+        }
+    }
+
+    // Atualizar quantidade de item no carrinho
+    async function updateCartItem(itemId, quantity) {
+        if (quantity <= 0) {
+            removeCartItem(itemId);
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/cart/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    cart_item_id: itemId,
+                    quantity: quantity
+                })
+            });
+
+            if (!res.ok) {
+                alert('Erro: Você precisa estar logado para modificar o carrinho');
+                return;
+            }
+
+            const data = await res.json();
+            if (data.success) {
+                updateCartBadgeSitewide();
+                updateCartSidebar();
+            }
+        } catch (err) {
+            console.error('Erro ao atualizar item:', err);
+            alert('Erro ao atualizar item do carrinho');
+        }
+    }
+
+    // Remover item do carrinho
+    async function removeCartItem(itemId) {
+        try {
+            const res = await fetch('/api/cart/remove', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    cart_item_id: itemId
+                })
+            });
+
+            if (!res.ok) {
+                alert('Erro: Você precisa estar logado para modificar o carrinho');
+                return;
+            }
+
+            const data = await res.json();
+            if (data.success) {
+                updateCartBadgeSitewide();
+                updateCartSidebar();
+            }
+        } catch (err) {
+            console.error('Erro ao remover item:', err);
+            alert('Erro ao remover item do carrinho');
+        }
+    }
+
+    // Atualizar badge do carrinho em toda a página
+    async function updateCartBadgeSitewide() {
+        try {
+            const res = await fetch('/api/cart');
+            if (!res.ok) {
+                // Se não estiver logado, não tenta atualizar
+                return;
+            }
+            const data = await res.json();
+
+            const count = data.total_items || 0;
+
+            // Atualizar badge na navbar
+            const navbarBadge = document.getElementById('cartBadge');
+            if (navbarBadge) {
+                if (count > 0) {
+                    navbarBadge.style.display = 'inline';
+                    navbarBadge.textContent = count;
+                } else {
+                    navbarBadge.style.display = 'none';
+                }
+            }
+
+            // Atualizar badge no botão flutuante
+            const floatingBadge = document.getElementById('floatingCartBadge');
+            if (floatingBadge) {
+                floatingBadge.textContent = count;
+                if (count > 0) {
+                    floatingBadge.style.display = 'flex';
+                } else {
+                    floatingBadge.style.display = 'none';
+                }
+            }
+        } catch (err) {
+            console.error('Erro ao atualizar badge', err);
+        }
+    }
+
+    // Inicializar quando a página carrega
+    document.addEventListener('DOMContentLoaded', function() {
+        updateCartBadgeSitewide();
+    });
+
+    </script>
+
+    <!-- Cart Sidebar -->
+    <div id="cartOverlay" class="cart-overlay" onclick="closeCartSidebar()"></div>
+    <div id="cartSidebar" class="cart-sidebar">
+        <div class="cart-header">
+            <h5 class="mb-0">Carrinho de Compras</h5>
+            <button class="btn-close" onclick="closeCartSidebar()"></button>
+        </div>
+        <div class="cart-body">
+            <div id="cartItems">
+                <p class="text-muted">Carrinho vazio</p>
+            </div>
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total mb-3">
+                <div class="cart-subtotal">
+                    <span>Subtotal:</span>
+                    <span id="cartSubtotal">R$ 0.00</span>
+                </div>
+                <div class="cart-total-final">
+                    <span>Total:</span>
+                    <span id="cartTotal">R$ 0.00</span>
+                </div>
+            </div>
+            <div class="d-grid gap-2">
+                <a href="{{ url_for('checkout_page') }}" class="btn btn-primary">Finalizar Compra</a>
+                <button class="btn btn-outline-secondary" onclick="closeCartSidebar()">Continuar Comprando</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Cart Button -->
+    <button id="floatingCartBtn" class="floating-cart-btn" onclick="toggleCartSidebar()">
+        <i class="fas fa-shopping-cart"></i>
+        <span id="floatingCartBadge" class="floating-cart-badge">0</span>
+    </button>
+
+    {% block scripts %}{% endblock %}
+
+
+    </style>
+</body>
+</html>

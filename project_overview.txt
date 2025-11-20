@@ -1,0 +1,89 @@
+ACADSHOP PROJECT OVERVIEW
+=========================
+
+TECNOLOGIAS UTILIZADAS:
+- Linguagem: Python 3.x
+- Framework Web: Flask
+- ORM: SQLAlchemy (Flask-SQLAlchemy)
+- Banco de Dados: PostgreSQL (configurado via DATABASE_URL), com suporte a SQLite (arquivos em instance/)
+- Autenticação: Flask-Login
+- Pagamentos: Stripe API
+- Frontend: HTML5, CSS3, JavaScript (Jinja2 templates)
+- Internacionalização: Flask-Babel (traduções em pt_BR)
+- Outros: Werkzeug (segurança), python-dotenv (variáveis de ambiente)
+
+ESTRUTURA DO PROJETO:
+- app.py: Aplicação principal Flask com todas as rotas e lógica
+- models.py: Modelos de dados (User, Product, Category, Cart, Order, etc.)
+- requirements.txt: Dependências Python
+- static/: Arquivos estáticos (CSS, JS, imagens)
+- templates/: Templates HTML (base.html, index.html, products.html, etc.)
+- AcadShop/: Estrutura Django (aparentemente não utilizada na versão atual)
+- core/: Módulo Django com models, views, forms (não integrado)
+- instance/: Bancos de dados SQLite
+- translations/: Arquivos de tradução
+
+FUNCIONALIDADES IMPLEMENTADAS:
+
+1. AUTENTICAÇÃO E USUÁRIOS:
+   - Registro e login de usuários
+   - Perfis de usuário com upload de foto
+   - Sistema de admin com painel administrativo
+   - Controle de permissões
+
+2. PRODUTOS E CATALOGO:
+   - CRUD completo de produtos (admin)
+   - Categorias de produtos
+   - Sistema de estoque com tamanhos e cores
+   - Busca e filtros de produtos
+   - Avaliações e reviews de produtos
+   - Lista de desejos (wishlist)
+
+3. CARRINHO DE COMPRAS:
+   - Adicionar/remover produtos
+   - Atualização de quantidades
+   - Cálculo automático de totais
+   - Suporte a tamanhos e cores
+
+4. CHECKOUT E PAGAMENTOS:
+   - Integração com Stripe
+   - Processamento de pagamentos
+   - Criação de pedidos (orders)
+   - Confirmação de pedidos
+
+5. API REST:
+   - Endpoints para carrinho (/api/cart/*)
+   - Endpoints para reviews (/api/reviews/*)
+   - Endpoints para checkout (/api/checkout)
+   - Endpoints para pagamentos (/api/payment/*)
+
+6. INTERFACE WEB:
+   - Design responsivo com CSS moderno
+   - Páginas: Home, Produtos, Detalhes do Produto, Carrinho, Checkout, Perfil
+   - Painel administrativo completo
+   - Sistema de navegação e menus
+
+7. BANCO DE DADOS:
+   - Modelos: User, Category, Product, Cart, CartItem, Order, OrderItem, Review, SiteReview, Wishlist
+   - Relacionamentos complexos (um-para-muitos, muitos-para-muitos)
+   - Migrações e seeders
+
+8. RECURSOS ADICIONAIS:
+   - Sistema de avaliações do site
+   - Newsletter subscription
+   - Upload de imagens para produtos e perfis
+   - Logs e tratamento de erros
+   - Inicialização automática do banco
+
+CONFIGURAÇÃO:
+- Servidor de desenvolvimento: Flask dev server (porta 5000)
+- Debug mode: Ativado
+- Variáveis de ambiente: .env (Stripe keys, DB URL, etc.)
+- Admin padrão: username 'admin', senha 'admin123'
+
+OBSERVAÇÕES:
+- O projeto parece ter sido iniciado com Django (pasta AcadShop/core), mas convertido para Flask
+- Banco principal é PostgreSQL, mas há arquivos SQLite para desenvolvimento
+- Integração completa com Stripe para pagamentos
+- Sistema multilíngue (português brasileiro)
+- Estrutura modular com blueprints (não utilizados atualmente)

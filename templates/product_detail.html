@@ -1,0 +1,539 @@
+{% extends "base.html" %}
+
+{% block title %}AcadShop - {{ product.name }}{% endblock %}
+
+{% block content %}
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="container mt-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/" class="text-decoration-none">Home</a></li>
+            <li class="breadcrumb-item"><a href="/produtos" class="text-decoration-none">Produtos</a></li>
+            <li class="breadcrumb-item active text-muted" aria-current="page">{{ product.name }}</li>
+        </ol>
+    </nav>
+
+    <!-- Link to Product Detail CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/product_detail.css') }}">
+
+    <!-- Product Detail Section -->
+    <section class="product-detail-section py-5">
+        <div class="container product-detail-container">
+            <div class="row g-5">
+                <!-- Product Images -->
+                <div class="col-md-6">
+                    <div class="product-gallery">
+                        <div class="product-main-image">
+                        {% if product.images %}
+                            <div id="productCarousel" class="carousel slide carousel-modern" data-bs-ride="carousel" data-bs-interval="4000">
+                                <div class="carousel-inner">
+                                    {% set image_list = product.images.split(',') %}
+                                    {% for image_url in image_list %}
+                                        <div class="carousel-item {% if loop.first %}active{% endif %}">
+                                            <img src="{{ image_url.strip() }}" class="d-block w-100" alt="{{ product.name }}" style="height: 500px; object-fit: cover; border-radius: 16px; transition: transform 0.3s ease;">
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                {% if image_list|length > 1 %}
+                                <button class="carousel-control-prev carousel-control-modern" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
+                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Previous</span>
+                                </button>
+                                <button class="carousel-control-next carousel-control-modern" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
+                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Next</span>
+                                </button>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <img src="{{ product.image }}" class="img-fluid rounded" alt="{{ product.name }}" style="height: 500px; object-fit: cover; border-radius: 16px;">
+                        {% endif %}
+
+                        <!-- Image Thumbnails -->
+                        {% if product.images and image_list|length > 1 %}
+                        <div class="product-thumbnails mt-3">
+                            {% for image_url in image_list %}
+                            <img src="{{ image_url.strip() }}" alt="{{ product.name }}" class="thumbnail-img" onclick="changeImage(this.src)">
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Description -->
+                <div class="col-md-6">
+                    <div class="product-description-card">
+                        <h1 class="product-title mb-3">{{ product.name }}</h1>
+                        <h5 class="description-title mb-3">Descrição</h5>
+                        <p class="description-text" id="product-description" style="font-size: 18px; line-height: 1.8; color: #333; word-wrap: break-word; max-height: 100px; overflow: hidden;">{{ product.description }}</p>
+                        <button id="read-more-btn" class="btn btn-link p-0 mt-2" style="font-size: 16px; color: #007bff;">Ler mais</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Info Below -->
+            <div class="row g-5 mt-4">
+                <div class="col-12">
+                    <div class="product-info-card">
+                        <!-- Product Rating -->
+                        <div class="product-rating mb-4">
+                            <div class="stars">
+                                {% for i in range(1, 6) %}
+                                    {% if average_rating >= i %}
+                                        <i class="fas fa-star"></i>
+                                    {% elif average_rating >= i - 0.5 %}
+                                        <i class="fas fa-star-half-alt"></i>
+                                    {% else %}
+                                        <i class="far fa-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <span class="rating-text ms-2">({{ "%.1f"|format(average_rating) }}) - {{ review_count }} avaliações</span>
+                        </div>
+
+                        <!-- Product Price -->
+                        <div class="product-price mb-4">
+                            <span class="current-price">R$ {{ "%.2f"|format(product.price) }}</span>
+                            {% if product.price < 200 %}
+                                <span class="offer-badge">Em Oferta</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Product Options -->
+                        <div class="product-options mb-4">
+                            {% if product.sizes %}
+                            <div class="option-group mb-4">
+                                <label class="option-label">Tamanho</label>
+                                <div class="size-options">
+                                    {% for size in product.sizes.split(',') %}
+                                    <button class="size-btn" data-size="{{ size.strip() }}">{{ size.strip() }}</button>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if product.colors %}
+                            <div class="option-group mb-4">
+                                <label class="option-label">Cor</label>
+                                <div class="color-options">
+                                    {% for color in product.colors.split(',') %}
+                                    <button class="color-btn" data-color="{{ color.strip() }}">{{ color.strip() }}</button>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Quantity and Add to Cart -->
+                        <div class="add-to-cart-section mb-4">
+                            <div class="quantity-section mb-4">
+                                <label class="quantity-label">Quantidade</label>
+                                <div class="quantity-controls">
+                                    <button class="qty-btn" onclick="changeQuantity(-1)">-</button>
+                                    <input type="number" class="qty-input" id="quantity" value="1" min="1" max="10">
+                                    <button class="qty-btn" onclick="changeQuantity(1)">+</button>
+                                </div>
+                            </div>
+                            <button class="add-to-cart-btn" id="addToCartBtn" onclick="addToCart({{ product.id }})">
+                                <i class="fas fa-cart-plus me-2"></i>Adicionar ao Carrinho
+                            </button>
+                        </div>
+
+                        <!-- Additional Info -->
+                        <div class="additional-info">
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <i class="fas fa-truck"></i>
+                                    <span>Frete Grátis</span>
+                                </div>
+                                <div class="info-item">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <span>Garantia</span>
+                                </div>
+                                <div class="info-item">
+                                    <i class="fas fa-undo"></i>
+                                    <span>Devolução</span>
+                                </div>
+                                <div class="info-item">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Estoque: {{ product.stock }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Description Section -->
+            <div class="row g-5 mt-4">
+                <div class="col-12">
+                    <div class="product-description-card">
+                        <h3 class="description-title mb-4">Descrição do Produto</h3>
+                        <p class="description-text" style="font-size: 18px; line-height: 1.8; color: #333; word-wrap: break-word;">{{ product.description }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+
+    <!-- Reviews Section -->
+    <section class="reviews-section py-5 bg-light">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <h2 class="section-title mb-4">Avaliações dos Clientes</h2>
+
+                    <!-- Review Summary -->
+                    <div class="review-summary mb-4">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="rating-overview text-center">
+                                    <div class="average-rating mb-2">
+                                        <span class="rating-number">{{ "%.1f"|format(average_rating) }}</span>
+                                        <div class="stars">
+                                            {% for i in range(1, 6) %}
+                                                {% if average_rating >= i %}
+                                                    <i class="fas fa-star"></i>
+                                                {% elif average_rating >= i - 0.5 %}
+                                                    <i class="fas fa-star-half-alt"></i>
+                                                {% else %}
+                                                    <i class="far fa-star"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <p class="rating-count">{{ review_count }} avaliações</p>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="rating-breakdown">
+                                    {% for star in range(5, 0, -1) %}
+                                        <div class="rating-bar mb-2">
+                                            <span class="star-label">{{ star }} estrela{{ 's' if star > 1 else '' }}</span>
+                                            <div class="progress">
+                                                <div class="progress-bar" style="width: {{ (rating_distribution[star] / review_count * 100) if review_count > 0 else 0 }}%"></div>
+                                            </div>
+                                            <span class="rating-count">{{ rating_distribution[star] }}</span>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Write Review Button -->
+                    {% if current_user.is_authenticated %}
+                        <div class="text-end mb-4">
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                                <i class="fas fa-star me-2"></i>Escrever Avaliação
+                            </button>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info mb-4">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <a href="/login" class="alert-link">Faça login</a> para escrever uma avaliação.
+                        </div>
+                    {% endif %}
+
+                    <!-- Reviews List -->
+                    <div id="reviewsContainer">
+                        {% if reviews %}
+                            {% for review in reviews %}
+                                <div class="review-card mb-4">
+                                    <div class="review-header d-flex justify-content-between align-items-start mb-3">
+                                        <div class="reviewer-info">
+                                            <h5 class="reviewer-name mb-1">{{ review.user.username }}</h5>
+                                            <div class="review-rating">
+                                                {% for i in range(1, 6) %}
+                                                    {% if review.rating >= i %}
+                                                        <i class="fas fa-star"></i>
+                                                    {% else %}
+                                                        <i class="far fa-star"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <div class="review-date">
+                                            <small class="text-muted">{{ review.created_at.strftime('%d/%m/%Y') }}</small>
+                                        </div>
+                                    </div>
+                                    {% if review.title %}
+                                        <h6 class="review-title mb-2">{{ review.title }}</h6>
+                                    {% endif %}
+                                    <p class="review-comment">{{ review.comment }}</p>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="no-reviews text-center py-5">
+                                <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+                                <h4 class="text-muted">Nenhuma avaliação ainda</h4>
+                                <p class="text-muted">Seja o primeiro a avaliar este produto!</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Review Modal -->
+    {% if current_user.is_authenticated %}
+    <div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reviewModalLabel">Escrever Avaliação</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="reviewForm">
+                        <div class="mb-3">
+                            <label for="rating" class="form-label">Avaliação</label>
+                            <div class="rating-stars">
+                                <i class="far fa-star" data-rating="1"></i>
+                                <i class="far fa-star" data-rating="2"></i>
+                                <i class="far fa-star" data-rating="3"></i>
+                                <i class="far fa-star" data-rating="4"></i>
+                                <i class="far fa-star" data-rating="5"></i>
+                            </div>
+                            <input type="hidden" id="rating" name="rating" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Título (opcional)</label>
+                            <input type="text" class="form-control" id="title" name="title" maxlength="100">
+                        </div>
+                        <div class="mb-3">
+                            <label for="comment" class="form-label">Comentário</label>
+                            <textarea class="form-control" id="comment" name="comment" rows="4" required></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="submitReview">Enviar Avaliação</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let selectedSize = '';
+    let selectedColor = '';
+
+    // Função para mudar quantidade
+    function changeQuantity(delta) {
+        const qtyInput = document.getElementById('quantity');
+        let currentQty = parseInt(qtyInput.value);
+        currentQty += delta;
+        if (currentQty < 1) currentQty = 1;
+        if (currentQty > 10) currentQty = 10;
+        qtyInput.value = currentQty;
+    }
+
+    // Function to change main image when thumbnail is clicked
+    function changeImage(imageSrc) {
+        const carouselItems = document.querySelectorAll('#productCarousel .carousel-item');
+
+        carouselItems.forEach((item, index) => {
+            const img = item.querySelector('img');
+            if (img.src === imageSrc) {
+                // Use Bootstrap carousel to go to that slide
+                $('#productCarousel').carousel(index);
+            }
+        });
+    }
+
+    // Initialize size and color selection and thumbnail functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        // Size button handlers
+        document.querySelectorAll('.size-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                selectedSize = this.dataset.size;
+            });
+        });
+
+        // Color button handlers
+        document.querySelectorAll('.color-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                selectedColor = this.dataset.color;
+            });
+        });
+
+        // Initialize first thumbnail as active
+        const firstThumbnail = document.querySelector('.thumbnail-img');
+        if (firstThumbnail) {
+            firstThumbnail.classList.add('active');
+        }
+
+        // Update thumbnail active state on carousel slide change
+        const carousel = document.getElementById('productCarousel');
+        if (carousel) {
+            carousel.addEventListener('slid.bs.carousel', function (event) {
+                const thumbnails = document.querySelectorAll('.thumbnail-img');
+                thumbnails.forEach(t => t.classList.remove('active'));
+                thumbnails[event.to].classList.add('active');
+            });
+        }
+    });
+
+
+
+    function addToCart(productId) {
+        const quantity = parseInt(document.getElementById('quantity').value);
+
+        const payload = {
+            product_id: productId,
+            quantity: quantity
+        };
+        if (selectedSize) payload.size = selectedSize;
+        if (selectedColor) payload.color = selectedColor;
+
+        fetch('/api/cart/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Produto adicionado ao carrinho!', 'success');
+                updateCartBadge();
+            } else {
+                showToast(data.error, 'danger');
+            }
+        })
+        .catch(error => showToast('Erro ao adicionar ao carrinho', 'danger'));
+    }
+
+    // Toast notification
+    function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-white bg-${type} border-0 position-fixed`;
+        toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    // Update cart badge
+    function updateCartBadge() {
+        fetch('/api/cart')
+        .then(response => response.json())
+        .then(data => {
+            const badge = document.querySelector('.cart-badge');
+            if (badge) {
+                const totalItems = data.items.reduce((sum, item) => sum + item.quantity, 0);
+                badge.textContent = totalItems;
+                badge.style.display = totalItems > 0 ? 'inline' : 'none';
+            }
+        });
+    }
+
+    // Read more functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const readMoreBtn = document.getElementById('read-more-btn');
+        const description = document.getElementById('product-description');
+
+        if (readMoreBtn && description) {
+            readMoreBtn.addEventListener('click', function() {
+                if (description.style.maxHeight === 'none') {
+                    description.style.maxHeight = '100px';
+                    description.style.overflow = 'hidden';
+                    readMoreBtn.textContent = 'Ler mais';
+                } else {
+                    description.style.maxHeight = 'none';
+                    description.style.overflow = 'visible';
+                    readMoreBtn.textContent = 'Ler menos';
+                }
+            });
+        }
+    });
+
+    // Review functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        // Star rating selection
+        const ratingStars = document.querySelectorAll('.rating-stars i');
+        const ratingInput = document.getElementById('rating');
+
+        ratingStars.forEach(star => {
+            star.addEventListener('click', function() {
+                const rating = parseInt(this.dataset.rating);
+                ratingInput.value = rating;
+
+                // Update star display
+                ratingStars.forEach((s, index) => {
+                    if (index < rating) {
+                        s.classList.remove('far');
+                        s.classList.add('fas');
+                    } else {
+                        s.classList.remove('fas');
+                        s.classList.add('far');
+                    }
+                });
+            });
+        });
+
+        // Submit review
+        const submitReviewBtn = document.getElementById('submitReview');
+        if (submitReviewBtn) {
+            submitReviewBtn.addEventListener('click', function() {
+                const form = document.getElementById('reviewForm');
+                const formData = new FormData(form);
+
+                const reviewData = {
+                    product_id: {{ product.id }},
+                    rating: parseInt(formData.get('rating')),
+                    title: formData.get('title'),
+                    comment: formData.get('comment')
+                };
+
+                fetch('/api/reviews/submit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(reviewData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('Avaliação enviada com sucesso!', 'success');
+                        // Close modal
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('reviewModal'));
+                        modal.hide();
+                        // Reset form
+                        form.reset();
+                        ratingStars.forEach(s => {
+                            s.classList.remove('fas');
+                            s.classList.add('far');
+                        });
+                        // Reload page to show new review
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showToast(data.error || 'Erro ao enviar avaliação', 'danger');
+                    }
+                })
+                .catch(error => {
+                    showToast('Erro ao enviar avaliação', 'danger');
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

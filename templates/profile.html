@@ -1,0 +1,701 @@
+{% extends 'base.html' %}
+
+{% block title %}Meu Perfil - AcadShop{% endblock %}
+
+{% block content %}
+<div class="container py-5 profile-page">
+    <div class="row">
+        <!-- Sidebar de navegação do perfil -->
+        <div class="col-lg-3 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <div class="profile-avatar mb-3 d-flex justify-content-center">
+                        {% if current_user.profile_picture %}
+                            <img src="{{ url_for('static', filename=current_user.profile_picture) }}" alt="Foto de Perfil" class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 100px; height: 100px; font-size: 2.5rem;">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <h5 class="card-title mb-1">{{ current_user.username }}</h5>
+                    <p class="text-muted small mb-3">{{ current_user.email }}</p>
+                    <p class="text-muted small">Membro desde {{ current_user.created_at.strftime('%b %Y') }}</p>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="#orders" class="list-group-item list-group-item-action active" data-bs-toggle="tab">
+                        <i class="fas fa-shopping-bag me-2"></i>Meus Pedidos
+                    </a>
+                    <a href="#account" class="list-group-item list-group-item-action" data-bs-toggle="tab">
+                        <i class="fas fa-user-edit me-2"></i>Informações da Conta
+                    </a>
+                    <a href="#payment" class="list-group-item list-group-item-action" data-bs-toggle="tab">
+                        <i class="fas fa-credit-card me-2"></i>Métodos de Pagamento
+                    </a>
+                    <a href="#settings" class="list-group-item list-group-item-action" data-bs-toggle="tab">
+                        <i class="fas fa-cog me-2"></i>Configurações
+                    </a>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Conteúdo principal -->
+        <div class="col-lg-9">
+            <div class="tab-content">
+                <!-- Aba de Pedidos -->
+                <div class="tab-pane fade show active" id="orders">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="fas fa-shopping-bag me-2"></i>Histórico de Pedidos</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if orders %}
+                                <div class="row">
+                                    {% for order in orders %}
+                                    <div class="col-md-6 mb-4">
+                                        <div class="card border">
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                                    <div>
+                                                        <h6 class="card-title mb-1">Pedido #{{ order.id }}</h6>
+                                                        <p class="text-muted small mb-0">{{ order.created_at.strftime('%d/%m/%Y %H:%M') }}</p>
+                                                    </div>
+                                                    <span class="badge bg-{{ order.status == 'delivered' and 'success' or 'warning' }}">
+                                                        {{ order.get_status_display }}
+                                                    </span>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <p class="mb-1"><strong>Total:</strong> R$ {{ "%.2f"|format(order.total_amount) }}</p>
+                                                    <p class="mb-1"><strong>Pagamento:</strong> {{ order.get_payment_method_display }}</p>
+                                                    <p class="mb-0"><strong>Endereço:</strong> {{ order.shipping_address }}</p>
+                                                </div>
+                                                <div class="order-items">
+                                                    <small class="text-muted">Itens:</small>
+                                                    <div class="table-responsive">
+                                                        <table class="table table-sm table-borderless">
+                                                            <tbody>
+                                                                {% for item in order.items %}
+                                                                <tr>
+                                                                    <td style="width: 50px;">
+                                                                        <img src="{{ url_for('static', filename=item.product.image) }}" alt="{{ item.product.name }}" class="img-thumbnail" style="width: 40px; height: 40px; object-fit: cover;">
+                                                                    </td>
+                                                                    <td>
+                                                                        <strong>{{ item.product.name }}</strong>
+                                                                        {% if item.size or item.color %}
+                                                                        <br><small class="text-muted">
+                                                                            {% if item.size %}Tamanho: {{ item.size }}{% endif %}
+                                                                            {% if item.color %} | Cor: {{ item.color }}{% endif %}
+                                                                        </small>
+                                                                        {% endif %}
+                                                                    </td>
+                                                                    <td class="text-end">
+                                                                        {{ item.quantity }}x
+                                                                    </td>
+                                                                    <td class="text-end">
+                                                                        R$ {{ "%.2f"|format(item.price) }}
+                                                                    </td>
+                                                                </tr>
+                                                                {% endfor %}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                                <button class="btn btn-outline-primary btn-sm mt-2" onclick="viewOrderDetails({{ order.id }})">
+                                                    <i class="fas fa-eye me-1"></i>Ver Detalhes
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                                    <h5 class="text-muted">Nenhum pedido encontrado</h5>
+                                    <p class="text-muted">Você ainda não fez nenhum pedido.</p>
+                                    <a href="{{ url_for('products_page') }}" class="btn btn-primary">
+                                        <i class="fas fa-store me-2"></i>Começar a Comprar
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aba de Informações da Conta -->
+                <div class="tab-pane fade" id="account">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="fas fa-user-edit me-2"></i>Informações da Conta</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" enctype="multipart/form-data">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="username" class="form-label">Nome de Usuário</label>
+                                        <input type="text" class="form-control" id="username" name="username" value="{{ current_user.username }}" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="email" class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="email" name="email" value="{{ current_user.email }}" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="first_name" class="form-label">Primeiro Nome</label>
+                                    <input type="text" class="form-control" id="first_name" name="first_name" value="">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="last_name" class="form-label">Sobrenome</label>
+                                    <input type="text" class="form-control" id="last_name" name="last_name" value="">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="profile_picture" class="form-label">Foto de Perfil</label>
+                                    <input type="file" class="form-control" id="profile_picture" name="profile_picture" accept="image/*" onchange="previewImage(this)">
+                                    <div class="form-text">Selecione uma imagem (JPG, PNG, GIF). Tamanho máximo: 5MB.</div>
+                                    <div id="image_preview" class="mt-2" style="display: none;">
+                                        <img id="preview_img" src="" alt="Preview" class="img-thumbnail" style="max-width: 200px; max-height: 200px;">
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-success" id="submit_btn">
+                                    <i class="fas fa-save me-2"></i>Salvar Alterações
+                                </button>
+                                <div id="upload_status" class="mt-2" style="display: none;"></div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aba de Métodos de Pagamento -->
+                <div class="tab-pane fade" id="payment">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0"><i class="fas fa-credit-card me-2"></i>Métodos de Pagamento</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-4">
+                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPaymentModal">
+                                    <i class="fas fa-plus me-2"></i>Adicionar Método de Pagamento
+                                </button>
+                            </div>
+
+                            <div class="row">
+                                <!-- Cartão de exemplo -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <i class="fas fa-credit-card fa-2x text-primary mb-2"></i>
+                                                    <h6 class="card-title mb-1">**** **** **** 1234</h6>
+                                                    <p class="text-muted small mb-0">Visa - Expira em 12/25</p>
+                                                </div>
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                        <i class="fas fa-ellipsis-v"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li><a class="dropdown-item" href="#"><i class="fas fa-edit me-2"></i>Editar</a></li>
+                                                        <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-trash me-2"></i>Remover</a></li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Nota:</strong> Seus dados de pagamento são criptografados e armazenados com segurança.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aba de Configurações -->
+                <div class="tab-pane fade" id="settings">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0"><i class="fas fa-cog me-2"></i>Configurações da Conta</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-4">
+                                <h6>Alterar Senha</h6>
+                                <form method="post">
+                                    <div class="mb-3">
+                                        <label for="current_password" class="form-label">Senha Atual</label>
+                                        <input type="password" class="form-control" id="current_password" name="current_password" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="new_password" class="form-label">Nova Senha</label>
+                                        <input type="password" class="form-control" id="new_password" name="new_password" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="confirm_password" class="form-label">Confirmar Nova Senha</label>
+                                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-warning">
+                                        <i class="fas fa-key me-2"></i>Alterar Senha
+                                    </button>
+                                </form>
+                            </div>
+
+                            <hr>
+
+                            <div class="mb-4">
+                                <h6 class="text-danger">Zona de Perigo</h6>
+                                <p class="text-muted">Ações irreversíveis</p>
+                                <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                                    <i class="fas fa-trash me-2"></i>Excluir Conta
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para adicionar método de pagamento -->
+<div class="modal fade" id="addPaymentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Adicionar Método de Pagamento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label for="card_number" class="form-label">Número do Cartão</label>
+                        <input type="text" class="form-control" id="card_number" placeholder="1234 5678 9012 3456" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="expiry_date" class="form-label">Data de Expiração</label>
+                            <input type="text" class="form-control" id="expiry_date" placeholder="MM/AA" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="cvv" class="form-label">CVV</label>
+                            <input type="text" class="form-control" id="cvv" placeholder="123" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="card_name" class="form-label">Nome no Cartão</label>
+                        <input type="text" class="form-control" id="card_name" placeholder="João Silva" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary">Salvar Cartão</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para excluir conta -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">Excluir Conta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-danger"><strong>Atenção:</strong> Esta ação não pode ser desfeita.</p>
+                <p>Todos os seus dados, pedidos e histórico serão permanentemente excluídos.</p>
+                <div class="mb-3">
+                    <label for="confirm_delete" class="form-label">Digite "EXCLUIR" para confirmar:</label>
+                    <input type="text" class="form-control" id="confirm_delete" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn" disabled>Excluir Conta</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Função para visualizar detalhes do pedido
+function viewOrderDetails(orderId) {
+    // Implementar modal ou redirecionamento para detalhes do pedido
+    console.log('Visualizando pedido:', orderId);
+}
+
+// Validação para exclusão de conta
+document.getElementById('confirm_delete').addEventListener('input', function() {
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    if (this.value === 'EXCLUIR') {
+        confirmBtn.disabled = false;
+    } else {
+        confirmBtn.disabled = true;
+    }
+});
+
+// Função para preview da imagem
+function previewImage(input) {
+    const preview = document.getElementById('image_preview');
+    const previewImg = document.getElementById('preview_img');
+
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+
+        // Validar tamanho do arquivo (5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('Arquivo muito grande. Máximo 5MB.');
+            input.value = '';
+            preview.style.display = 'none';
+            return;
+        }
+
+        // Validar tipo de arquivo
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            alert('Tipo de arquivo não permitido. Use apenas JPG, PNG, GIF ou WebP.');
+            input.value = '';
+            preview.style.display = 'none';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImg.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    } else {
+        preview.style.display = 'none';
+    }
+}
+
+// Função para atualizar foto de perfil via AJAX
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('#account form');
+    const submitBtn = document.getElementById('submit_btn');
+    const uploadStatus = document.getElementById('upload_status');
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Salvando...';
+
+        uploadStatus.style.display = 'none';
+        uploadStatus.className = 'mt-2';
+
+        fetch('/profile', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                uploadStatus.className = 'mt-2 alert alert-success';
+                uploadStatus.innerHTML = '<i class="fas fa-check me-2"></i>' + data.message;
+                uploadStatus.style.display = 'block';
+
+                // Atualizar foto de perfil na sidebar se foi enviada
+                if (data.profile_picture) {
+                    const sidebarImg = document.querySelector('.profile-avatar img');
+                    const sidebarIcon = document.querySelector('.profile-avatar .bg-primary');
+
+                    if (sidebarImg) {
+                        sidebarImg.src = data.profile_picture;
+                    } else if (sidebarIcon) {
+                        // Substituir ícone por imagem
+                        const img = document.createElement('img');
+                        img.src = data.profile_picture;
+                        img.alt = 'Foto de Perfil';
+                        img.className = 'rounded-circle';
+                        img.style.width = '100px';
+                        img.style.height = '100px';
+                        img.style.objectFit = 'cover';
+                        sidebarIcon.parentNode.replaceChild(img, sidebarIcon);
+                    }
+                }
+
+                // Limpar preview após sucesso
+                document.getElementById('image_preview').style.display = 'none';
+                document.getElementById('profile_picture').value = '';
+
+                // Esconder status após 3 segundos
+                setTimeout(() => {
+                    uploadStatus.style.display = 'none';
+                }, 3000);
+            } else {
+                uploadStatus.className = 'mt-2 alert alert-danger';
+                uploadStatus.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>' + data.error;
+                uploadStatus.style.display = 'block';
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            uploadStatus.className = 'mt-2 alert alert-danger';
+            uploadStatus.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Erro ao salvar alterações. Tente novamente.';
+            uploadStatus.style.display = 'block';
+        })
+        .finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-save me-2"></i>Salvar Alterações';
+        });
+    });
+});
+</script>
+
+<style>
+.profile-avatar {
+    position: relative;
+}
+
+.order-items table {
+    border: none;
+}
+
+.order-items table th,
+.order-items table td {
+    border: none;
+    padding: 8px;
+}
+
+.order-items table th {
+    background-color: #D4AF37;
+    color: #000;
+}
+
+.list-group-item.active {
+    background-color: #fff;
+    border-color: #D4AF37;
+    color: #000;
+}
+
+.card-header {
+    border-bottom: none;
+    background-color: #f8f9fa;
+    color: #000;
+}
+
+.card {
+    border: none;
+    background-color: #fff;
+}
+
+.tab-pane {
+    animation: fadeIn var(--animation-duration, 0.3s) ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Botões e elementos interativos */
+.btn-primary {
+    background-color: #D4AF37;
+    border-color: #D4AF37;
+    color: #000;
+}
+
+.btn-primary:hover {
+    background-color: #B8860B;
+    border-color: #B8860B;
+    color: #000;
+}
+
+.btn-success {
+    background-color: #D4AF37;
+    border-color: #D4AF37;
+    color: #000;
+}
+
+.btn-success:hover {
+    background-color: #B8860B;
+    border-color: #B8860B;
+    color: #000;
+}
+
+.btn-warning {
+    background-color: #D4AF37;
+    border-color: #D4AF37;
+    color: #000;
+}
+
+.btn-warning:hover {
+    background-color: #B8860B;
+    border-color: #B8860B;
+    color: #000;
+}
+
+.btn-outline-primary {
+    border-color: #D4AF37;
+    color: #D4AF37;
+}
+
+.btn-outline-primary:hover {
+    background-color: #D4AF37;
+    border-color: #D4AF37;
+    color: #000;
+}
+
+.btn-outline-danger {
+    border-color: #000;
+    color: #000;
+}
+
+.btn-outline-danger:hover {
+    background-color: #000;
+    border-color: #000;
+    color: #fff;
+}
+
+.form-control {
+    border: 1px solid #ccc;
+    background-color: #fff;
+    color: #000;
+}
+
+.form-control:focus {
+    border-color: #D4AF37;
+    box-shadow: 0 0 0 0.2rem rgba(212, 175, 55, 0.25);
+}
+
+.badge {
+    background-color: #D4AF37 !important;
+    color: #000 !important;
+}
+
+.alert-info {
+    background-color: #f8f9fa;
+    border-color: #D4AF37;
+    color: #000;
+}
+
+.list-group-item {
+    border: none;
+    color: #000;
+    background-color: #fff;
+}
+
+
+
+.modal-content {
+    border: none;
+    background-color: #fff;
+}
+
+.modal-header {
+    background-color: #f8f9fa;
+    color: #000;
+    border-bottom: none;
+}
+
+.modal-footer {
+    border-top: none;
+}
+
+/* Tema personalizado: Branco, Preto e Dourado */
+body {
+    background-color: #fff;
+    color: #000;
+}
+
+.card {
+    background-color: #fff;
+    border: none;
+    color: #000;
+}
+
+.card-header.bg-primary {
+    background-color: #D4AF37 !important;
+    color: #000 !important;
+}
+
+.card-header.bg-success {
+    background-color: #D4AF37 !important;
+    color: #000 !important;
+}
+
+.card-header.bg-info {
+    background-color: #D4AF37 !important;
+    color: #000 !important;
+}
+
+.card-header.bg-warning {
+    background-color: #D4AF37 !important;
+    color: #000 !important;
+}
+
+.text-muted {
+    color: #666 !important;
+}
+
+.table {
+    color: #000;
+}
+
+.table th {
+    background-color: #D4AF37;
+    color: #000;
+    border: none;
+}
+
+.table td {
+    border: none;
+}
+
+.dropdown-menu {
+    background-color: #fff;
+    border: none;
+}
+
+.dropdown-item {
+    color: #000;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+    color: #000;
+}
+
+/* Links dourados */
+a {
+    color: #D4AF37;
+}
+
+a:hover {
+    color: #B8860B;
+}
+
+/* Ícones */
+.fas {
+    color: #D4AF37;
+}
+
+/* Sidebar */
+.profile-avatar .bg-primary {
+    background-color: #D4AF37 !important;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .order-items table {
+        font-size: 0.9rem;
+    }
+
+    .order-items table th,
+    .order-items table td {
+        padding: 4px;
+    }
+}
+</style>
+{% endblock %}

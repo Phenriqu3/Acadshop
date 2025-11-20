@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+{% block title %}Adicionar Produto - AcadShop{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card shadow border-0">
+        <div class="card-header bg-gradient text-white d-flex justify-content-between align-items-center" style="background: linear-gradient(90deg, #007bff, #6610f2);">
+          <h4 class="mb-0"><i class="fas fa-box-open me-2"></i>Adicionar Novo Produto</h4>
+          <a href="{{ url_for('admin_dashboard') }}" class="btn btn-light btn-sm">
+            <i class="fas fa-arrow-left me-1"></i> Voltar
+          </a>
+        </div>
+
+        <div class="card-body bg-light">
+          <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+            <!-- Nome -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold"><i class="fas fa-tag me-1"></i>Nome do Produto</label>
+              <input type="text" name="name" class="form-control form-control-lg" placeholder="Ex: Camiseta Básica Preta" required>
+              <div class="invalid-feedback">Informe o nome do produto.</div>
+            </div>
+
+            <!-- Descrição -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold"><i class="fas fa-align-left me-1"></i>Descrição</label>
+              <textarea name="description" class="form-control" rows="3" placeholder="Descreva o produto..."></textarea>
+            </div>
+
+            <!-- Linha de Preço + Estoque -->
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold"><i class="fas fa-dollar-sign me-1"></i>Preço (R$)</label>
+                <input type="number" step="0.01" name="price" class="form-control" placeholder="Ex: 59.90" required>
+                <div class="invalid-feedback">Informe o preço.</div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-semibold"><i class="fas fa-warehouse me-1"></i>Estoque Inicial</label>
+                <input type="number" name="stock" class="form-control" value="10" min="0">
+              </div>
+            </div>
+
+            <!-- Categoria -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold"><i class="fas fa-layer-group me-1"></i>Categoria</label>
+              <select name="category_id" class="form-select">
+                <option value="">Selecione...</option>
+                {% for cat in categories %}
+                <option value="{{ cat.id }}">{{ cat.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Tamanhos -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold"><i class="fas fa-tshirt me-1"></i>Tamanhos Disponíveis</label>
+              <input type="text" name="sizes" class="form-control" placeholder="Ex: P,M,G,GG (separe por vírgula)">
+              <div class="form-text">Deixe vazio se o produto não tiver tamanhos (ex: acessórios).</div>
+            </div>
+
+            <!-- Cores -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold"><i class="fas fa-palette me-1"></i>Cores Disponíveis</label>
+              <input type="text" name="colors" class="form-control" placeholder="Ex: Preto,Branco,Azul (separe por vírgula)">
+              <div class="form-text">Deixe vazio se o produto não tiver variações de cor.</div>
+            </div>
+
+            <!-- Imagens Múltiplas -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold"><i class="fas fa-images me-1"></i>Imagens do Produto</label>
+
+              <!-- URLs de imagens -->
+              <div id="url-inputs">
+                <div class="input-group mb-2">
+                  <input type="url" name="image_urls[]" class="form-control" placeholder="https://exemplo.com/imagem1.jpg" required>
+                  <button type="button" class="btn btn-outline-danger remove-url">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+              <button type="button" class="btn btn-outline-primary btn-sm" id="add-url">
+                <i class="fas fa-plus me-1"></i>Adicionar URL
+              </button>
+              <div class="form-text">Adicione URLs de imagens externas. A primeira URL será a imagem principal.</div>
+
+              <!-- Preview das URLs -->
+              <div id="url-preview" class="mt-3 d-none">
+                <h6>URLs adicionadas:</h6>
+                <div class="row g-2" id="url-preview-container"></div>
+              </div>
+            </div>
+
+            <!-- Opções -->
+            <div class="row mb-4">
+              <div class="col-md-6 form-check form-switch">
+                <input class="form-check-input" type="checkbox" name="is_featured" id="featured">
+                <label class="form-check-label" for="featured"><i class="fas fa-star me-1 text-warning"></i>Produto em destaque</label>
+              </div>
+              <div class="col-md-6 form-check form-switch">
+                <input class="form-check-input" type="checkbox" name="is_new" id="is_new">
+                <label class="form-check-label" for="is_new"><i class="fas fa-certificate me-1 text-success"></i>Produto novo</label>
+              </div>
+            </div>
+
+            <!-- Botão de Enviar -->
+            <div class="d-grid">
+              <button type="submit" class="btn btn-success btn-lg shadow-sm">
+                <i class="fas fa-save me-2"></i>Salvar Produto
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Validação Bootstrap
+(() => {
+  'use strict'
+  const forms = document.querySelectorAll('.needs-validation')
+  Array.from(forms).forEach(form => {
+    form.addEventListener('submit', event => {
+      if (!form.checkValidity()) {
+        event.preventDefault()
+        event.stopPropagation()
+      }
+      form.classList.add('was-validated')
+    }, false)
+  })
+})();
+
+// Adicionar/remover URLs
+document.getElementById('add-url').addEventListener('click', function() {
+  const urlInputs = document.getElementById('url-inputs');
+  const newInput = document.createElement('div');
+  newInput.className = 'input-group mb-2';
+  newInput.innerHTML = `
+    <input type="url" name="image_urls[]" class="form-control" placeholder="https://exemplo.com/imagem.jpg">
+    <button type="button" class="btn btn-outline-danger remove-url">
+      <i class="fas fa-trash"></i>
+    </button>
+  `;
+  urlInputs.appendChild(newInput);
+  updateUrlPreview();
+});
+
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('remove-url') || e.target.parentElement.classList.contains('remove-url')) {
+    const inputGroup = e.target.closest('.input-group');
+    if (inputGroup) {
+      inputGroup.remove();
+      updateUrlPreview();
+    }
+  }
+});
+
+// Preview das URLs
+function updateUrlPreview() {
+  const urlInputs = document.querySelectorAll('input[name="image_urls[]"]');
+  const previewContainer = document.getElementById('url-preview-container');
+  const previewDiv = document.getElementById('url-preview');
+
+  previewContainer.innerHTML = '';
+
+  const urls = Array.from(urlInputs).map(input => input.value).filter(url => url.trim() !== '');
+
+  if (urls.length > 0) {
+    previewDiv.classList.remove('d-none');
+
+    urls.forEach((url, index) => {
+      const col = document.createElement('div');
+      col.className = 'col-md-3';
+      col.innerHTML = `
+        <div class="card">
+          <img src="${url}" class="card-img-top" style="height: 100px; object-fit: cover;" onerror="this.src='/static/images/default.jpg'">
+          <div class="card-body p-2">
+            <small class="text-muted">${url.split('/').pop()}</small>
+            ${index === 0 ? '<br><small class="text-primary"><i class="fas fa-star"></i> Principal</small>' : ''}
+          </div>
+        </div>
+      `;
+      previewContainer.appendChild(col);
+    });
+  } else {
+    previewDiv.classList.add('d-none');
+  }
+}
+
+// Atualizar preview quando URLs mudarem
+document.addEventListener('input', function(e) {
+  if (e.target.name === 'image_urls[]') {
+    updateUrlPreview();
+  }
+});
+</script>
+{% endblock %}

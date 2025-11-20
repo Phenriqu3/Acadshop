@@ -1,0 +1,152 @@
+# Portuguese translations for AcadShop
+# Copyright (C) 2024
+# This file is distributed under the same license as the AcadShop package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: AcadShop\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-12-19 10:00-0300\n"
+"PO-Revision-Date: 2024-12-19 10:00-0300\n"
+"Last-Translator: \n"
+"Language-Team: Portuguese\n"
+"Language: pt\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+# Navigation
+msgid "Home"
+msgstr "Início"
+
+msgid "Products"
+msgstr "Produtos"
+
+msgid "Cart"
+msgstr "Carrinho"
+
+msgid "Login"
+msgstr "Entrar"
+
+msgid "Register"
+msgstr "Cadastrar"
+
+msgid "Logout"
+msgstr "Sair"
+
+msgid "Profile"
+msgstr "Perfil"
+
+msgid "Admin"
+msgstr "Admin"
+
+# Products page
+msgid "Our collection of products"
+msgstr "Nossa coleção de produtos"
+
+msgid "Search products..."
+msgstr "Buscar produtos..."
+
+msgid "Search"
+msgstr "Buscar"
+
+msgid "Sort by"
+msgstr "Ordenar por"
+
+msgid "Name (A-Z)"
+msgstr "Nome (A-Z)"
+
+msgid "Name (Z-A)"
+msgstr "Nome (Z-A)"
+
+msgid "Price (Lowest)"
+msgstr "Preço (Menor)"
+
+msgid "Price (Highest)"
+msgstr "Preço (Maior)"
+
+msgid "Newest"
+msgstr "Mais Recentes"
+
+msgid "Filters"
+msgstr "Filtros"
+
+msgid "Categories"
+msgstr "Categorias"
+
+msgid "Price Range"
+msgstr "Faixa de Preço"
+
+msgid "Min"
+msgstr "Mín"
+
+msgid "Max"
+msgstr "Máx"
+
+msgid "Apply Filter"
+msgstr "Aplicar Filtro"
+
+msgid "Clear Filters"
+msgstr "Limpar Filtros"
+
+msgid "Results for"
+msgstr "Resultados para"
+
+msgid "Category:"
+msgstr "Categoria:"
+
+msgid "All Products"
+msgstr "Todos os Produtos"
+
+msgid "No products found"
+msgstr "Nenhum produto encontrado"
+
+msgid "Try adjusting the filters or search terms to find what you're looking for."
+msgstr "Tente ajustar os filtros ou termos de busca para encontrar o que procura."
+
+msgid "View All Products"
+msgstr "Ver Todos os Produtos"
+
+# Product cards
+msgid "NEW"
+msgstr "NOVO"
+
+# Cart
+msgid "Add to Cart"
+msgstr "Adicionar ao Carrinho"
+
+msgid "Product added to cart!"
+msgstr "Produto adicionado ao carrinho!"
+
+msgid "Error adding product to cart"
+msgstr "Erro ao adicionar produto ao carrinho"
+
+msgid "You need to be logged in to modify the cart"
+msgstr "Você precisa estar logado para modificar o carrinho"
+
+msgid "Error updating cart item"
+msgstr "Erro ao atualizar item do carrinho"
+
+msgid "Item removed"
+msgstr "Item removido"
+
+msgid "Error removing item"
+msgstr "Erro ao remover item"
+
+# General
+msgid "Loading..."
+msgstr "Carregando..."
+
+msgid "Error:"
+msgstr "Erro:"
+
+msgid "Success"
+msgstr "Sucesso"
+
+msgid "Warning"
+msgstr "Aviso"
+
+msgid "Info"
+msgstr "Informação"

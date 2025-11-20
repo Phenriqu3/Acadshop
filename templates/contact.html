@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}AcadShop - Contato{% endblock %}
+
+{% block content %}
+    <section class="hero">
+        <div class="container">
+            <h1>Entre em Contato</h1>
+            <p>Fale conosco para dúvidas, sugestões ou suporte</p>
+        </div>
+    </section>
+
+    <section class="contact-section">
+        <h1>Contato</h1>
+        <p>Entre em contato conosco para dúvidas, sugestões ou suporte!</p>
+        <form>
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="name" placeholder="Seu nome">
+                <label for="name">Nome</label>
+            </div>
+            <div class="form-floating mb-3">
+                <input type="email" class="form-control" id="email" placeholder="Seu email">
+                <label for="email">Email</label>
+            </div>
+            <div class="form-floating mb-4">
+                <textarea class="form-control" id="message" rows="5" placeholder="Sua mensagem" style="height: 120px;"></textarea>
+                <label for="message">Mensagem</label>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Enviar</button>
+        </form>
+    </section>
+{% endblock %}

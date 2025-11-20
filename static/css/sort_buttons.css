@@ -1,0 +1,108 @@
+/* Reviews Sort Section Styles */
+.reviews-sort-section {
+    margin: 30px 0;
+    text-align: center;
+}
+
+.sort-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+.sort-title i {
+    color: #007bff;
+}
+
+.sort-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.sort-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border: 2px solid #007bff;
+    background-color: transparent;
+    color: #007bff;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.sort-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 123, 255, 0.1), transparent);
+    transition: left 0.5s;
+}
+
+.sort-btn:hover::before {
+    left: 100%;
+}
+
+.sort-btn:hover {
+    background-color: #007bff;
+    color: white;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 123, 255, 0.3);
+}
+
+.sort-btn.active {
+    background-color: #007bff;
+    color: white;
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.4);
+    transform: scale(1.05);
+}
+
+.sort-btn i {
+    font-size: 16px;
+    transition: transform 0.3s ease;
+}
+
+.sort-btn:hover i {
+    transform: scale(1.1);
+}
+
+.sort-btn.active i {
+    transform: rotate(360deg);
+    transition: transform 0.6s ease;
+}
+
+/* Responsive Design for Sort Buttons */
+@media (max-width: 768px) {
+    .sort-buttons {
+        gap: 10px;
+    }
+
+    .sort-btn {
+        padding: 10px 16px;
+        font-size: 13px;
+    }
+
+    .sort-btn span {
+        display: none;
+    }
+
+    .sort-btn i {
+        font-size: 18px;
+    }
+}

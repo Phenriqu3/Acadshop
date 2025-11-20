@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Painel do Administrador{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <h1 class="mb-4">Painel do Administrador</h1>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4>Produtos Cadastrados</h4>
+    <a href="{{ url_for('add_product') }}" class="btn btn-primary">
+      <i class="fas fa-plus"></i> Novo Produto
+    </a>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>Imagem</th>
+          <th>Nome</th>
+          <th>Preço</th>
+          <th>Categoria</th>
+          <th>Estoque</th>
+          <th>Ativo</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for product in products %}
+        <tr>
+          <td>
+            <img src="{{ product.image or url_for('static', filename='images/default.jpg') }}"
+                 style="width: 80px; height: 80px; object-fit: cover;">
+          </td>
+          <td>{{ product.name }}</td>
+          <td>R$ {{ "%.2f"|format(product.price) }}</td>
+          <td>{{ product.category.name if product.category else 'Sem categoria' }}</td>
+          <td>{{ product.stock }}</td>
+          <td>
+            {% if product.is_active %}
+              <span class="badge bg-success">Ativo</span>
+            {% else %}
+              <span class="badge bg-secondary">Inativo</span>
+            {% endif %}
+          </td>
+        <td>
+            <a href="{{ url_for('edit_product', product_id=product.id) }}" class="btn btn-warning btn-sm me-1">
+                <i class="fas fa-edit me-1"></i> Editar
+            </a>
+
+            <form method="POST" action="{{ url_for('delete_product', product_id=product.id) }}"
+                    class="d-inline"
+                    onsubmit="return confirmDelete('{{ product.name }}');">
+                <button type="submit" class="btn btn-danger btn-sm">
+                <i class="fas fa-trash-alt me-1"></i> Remover
+                </button>
+            </form>
+        </td>
+
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete(name) {
+  return confirm(`Tem certeza que deseja remover o produto "${name}"?`);
+}
+</script>
+{% endblock %}

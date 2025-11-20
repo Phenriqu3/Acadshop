@@ -1,0 +1,17 @@
+Flask==2.3.3
+Flask-SQLAlchemy==3.0.5
+Flask-CORS==4.0.0
+Flask-Login==0.6.3
+Werkzeug==2.3.7
+Jinja2==3.1.2
+Pillow==10.0.0
+psycopg2-binary==2.9.7
+Django==4.2.7
+python-decouple==3.8
+crispy-bootstrap5==0.7
+django-crispy-forms==2.1
+django-allauth==0.61.1
+django-haystack==3.2.1
+Whoosh==2.7.4
+stripe==7.4.0
+twilio==8.10.0

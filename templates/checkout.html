@@ -1,0 +1,468 @@
+{% extends "base.html" %}
+
+{% block title %}AcadShop - Finalizar Compra{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5" style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12">
+                <div class="text-center mb-5">
+                    <h1 class="display-4 fw-bold" style="color: #d4af37;">Finalizar Compra</h1>
+                    <p class="lead" style="color: #666666;">Revise seus itens e complete seu pedido</p>
+                    <div class="alert alert-warning mt-4" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Projeto Acadêmico:</strong> Este é um projeto educacional. Todos os pagamentos são simulados e não processam transações reais.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Coluna Principal -->
+            <div class="col-lg-8">
+                <!-- Itens do Carrinho -->
+                <div class="card shadow-sm border-0 mb-4" style="background: #ffffff; border: 1px solid #e9ecef; border-radius: 8px;">
+                    <div class="card-header bg-white border-0 py-3" style="background: #f8f9fa; border-radius: 8px 8px 0 0;">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-shopping-cart" style="color: #d4af37; margin-right: 0.5rem;"></i>
+                            <h5 class="mb-0 fw-bold" style="color: #000000;">Itens do Carrinho</h5>
+                            <span class="badge ms-auto" style="background: #d4af37; color: #000000;">{{ items|length }} item(ns)</span>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        {% for item in items %}
+                        <div class="d-flex align-items-center p-4 border-bottom">
+                            <div class="position-relative me-4">
+                                <img src="{{ item.image if item.image else 'https://via.placeholder.com/100' }}" alt="{{ item.name }}"
+                                     class="rounded shadow-sm" style="width:100px; height:100px; object-fit:cover;">
+                                <span class="badge" style="background: #d4af37; color: #000000; position: absolute; top: 0; left: 100%; transform: translate(-50%, -50%);">{{ item.quantity }}</span>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-2 fw-bold" style="color: #000000;">{{ item.name }}</h6>
+                                {% if item.selected_options %}
+                                <p class="fw-semibold mb-2 small" style="color: #d4af37;">{{ item.selected_options }}</p>
+                                {% endif %}
+                                <div class="d-flex align-items-center">
+                                    <span class="text-muted me-3">Quantidade: <strong>{{ item.quantity }}</strong></span>
+                                    <span class="fw-semibold" style="color: #d4af37;">R$ {{ "%.2f"|format(item.price) }}</span>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <p class="mb-0 fw-bold" style="color: #d4af37;">R$ {{ "%.2f"|format(item.subtotal) }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        <hr class="my-3">
+                        <div class="d-flex justify-content-between mb-4 px-4">
+                            <span class="h5 mb-0 fw-bold" style="color: #000000;">Total:</span>
+                            <span class="h4 mb-0 fw-bold" style="color: #d4af37;">R$ {{ "%.2f"|format(total_price + 10) }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pagamento -->
+                <div class="card shadow-sm border-0 mb-4" style="background: #ffffff; border: 1px solid #e9ecef; border-radius: 8px;">
+                    <div class="card-header bg-white border-0 py-3" style="background: #f8f9fa; border-radius: 8px 8px 0 0;">
+                        <h5 class="mb-0 fw-bold" style="color: #000000;">Pagamento</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Payment Method Selection -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold" style="color: #000000;">Método de Pagamento</label>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-check payment-option" style="border: 2px solid #e9ecef; border-radius: 8px; padding: 15px; cursor: pointer;" onclick="selectPaymentMethod('pix')">
+                                        <input class="form-check-input" type="radio" name="payment_method" id="pix_payment" value="pix">
+                                        <label class="form-check-label fw-bold" for="pix_payment">
+                                            <i class="fas fa-qrcode me-2" style="color: #32c37d;"></i>PIX
+                                            <br><small class="text-muted">Pagamento instantâneo (simulado)</small>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check payment-option" style="border: 2px solid #e9ecef; border-radius: 8px; padding: 15px; cursor: pointer;" onclick="selectPaymentMethod('boleto')">
+                                        <input class="form-check-input" type="radio" name="payment_method" id="boleto_payment" value="boleto">
+                                        <label class="form-check-label fw-bold" for="boleto_payment">
+                                            <i class="fas fa-barcode me-2" style="color: #ff6b35;"></i>Boleto Bancário
+                                            <br><small class="text-muted">Vencimento em 3 dias úteis (simulado)</small>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check payment-option" style="border: 2px solid #e9ecef; border-radius: 8px; padding: 15px; cursor: pointer;" onclick="selectPaymentMethod('stripe')">
+                                        <input class="form-check-input" type="radio" name="payment_method" id="stripe_payment" value="stripe" checked>
+                                        <label class="form-check-label fw-bold" for="stripe_payment">
+                                            <i class="fas fa-credit-card me-2" style="color: #6772e5;"></i>Cartão de Crédito/Débito
+                                            <br><small class="text-muted">Visa, Mastercard, etc. (Stripe)</small>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check payment-option" style="border: 2px solid #e9ecef; border-radius: 8px; padding: 15px; cursor: pointer;" onclick="selectPaymentMethod('paypal')">
+                                        <input class="form-check-input" type="radio" name="payment_method" id="paypal_payment" value="paypal">
+                                        <label class="form-check-label fw-bold" for="paypal_payment">
+                                            <i class="fab fa-paypal me-2" style="color: #0070ba;"></i>PayPal
+                                            <br><small class="text-muted">Conta PayPal necessária (simulado)</small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- PIX Payment Form -->
+                        <div id="pix_payment_form" class="payment-form d-none">
+                            <div class="text-center p-4" style="background: #f8f9fa; border-radius: 8px;">
+                                <i class="fas fa-qrcode fa-3x mb-3" style="color: #32c37d;"></i>
+                                <h5 class="mb-3">Pagamento via PIX</h5>
+                                <p class="text-muted mb-3">QR Code será gerado após confirmação do pedido</p>
+                                <div id="pix-qr-code" class="d-none">
+                                    <img src="" alt="QR Code PIX" class="img-fluid mb-3" style="max-width: 200px;">
+                                    <p class="small text-muted">Escaneie o QR Code com seu app bancário</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Boleto Payment Form -->
+                        <div id="boleto_payment_form" class="payment-form d-none">
+                            <div class="text-center p-4" style="background: #f8f9fa; border-radius: 8px;">
+                                <i class="fas fa-barcode fa-3x mb-3" style="color: #ff6b35;"></i>
+                                <h5 class="mb-3">Pagamento via Boleto</h5>
+                                <p class="text-muted mb-3">Boleto será gerado após confirmação do pedido</p>
+                                <div id="boleto-info" class="d-none">
+                                    <p class="small">Código de barras será exibido na próxima tela</p>
+                                    <p class="small text-warning">Vencimento: 3 dias úteis</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stripe Payment Form -->
+                        <div id="stripe_payment_form" class="payment-form">
+                            <div id="card-element" class="form-control" style="border-color: #e9ecef; height: auto; padding: 12px;">
+                                <!-- Stripe Elements will be inserted here -->
+                            </div>
+                            <div id="card-errors" class="text-danger mt-2" role="alert"></div>
+                        </div>
+
+                        <!-- PayPal Payment Form -->
+                        <div id="paypal_payment_form" class="payment-form d-none">
+                            <div id="paypal-button-container"></div>
+                            <p class="text-muted small mt-2">
+                                <i class="fab fa-paypal me-1"></i>
+                                Você será redirecionado para o PayPal para completar o pagamento
+                            </p>
+                        </div>
+
+                        <div class="mt-3">
+                            <p class="text-muted small mb-0">
+                                <i class="fas fa-lock me-1"></i>
+                                Seus dados de pagamento são processados de forma segura
+                            </p>
+                            <p class="text-warning small mt-2 mb-0">
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                <strong>Projeto Acadêmico:</strong> Todos os pagamentos são simulados para fins educacionais
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coluna Lateral -->
+            <div class="col-lg-4">
+                <!-- Informações de Entrega -->
+                <div class="card shadow-sm border-0 mb-4" style="background: #ffffff; border: 1px solid #e9ecef; border-radius: 8px;">
+                    <div class="card-header bg-white border-0 py-3" style="background: #f8f9fa; border-radius: 8px 8px 0 0;">
+                        <h5 class="mb-0 fw-bold" style="color: #000000;">Informações de Entrega</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="checkoutForm">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label for="name" class="form-label fw-semibold" style="color: #000000;">Nome Completo</label>
+                                    <input type="text" class="form-control" id="name" required style="border-color: #e9ecef;">
+                                </div>
+                                <div class="col-12">
+                                    <label for="email" class="form-label fw-semibold" style="color: #000000;">Email</label>
+                                    <input type="email" class="form-control" id="email" required style="border-color: #e9ecef;">
+                                </div>
+                                <div class="col-12">
+                                    <label for="address" class="form-label fw-semibold" style="color: #000000;">Endereço</label>
+                                    <input type="text" class="form-control" id="address" placeholder="Rua, número, complemento" required style="border-color: #e9ecef;">
+                                </div>
+                                <div class="col-6">
+                                    <label for="city" class="form-label fw-semibold" style="color: #000000;">Cidade</label>
+                                    <input type="text" class="form-control" id="city" required style="border-color: #e9ecef;">
+                                </div>
+                                <div class="col-3">
+                                    <label for="state" class="form-label fw-semibold" style="color: #000000;">Estado</label>
+                                    <input type="text" class="form-control" id="state" required style="border-color: #e9ecef;">
+                                </div>
+                                <div class="col-3">
+                                    <label for="zip" class="form-label fw-semibold" style="color: #000000;">CEP</label>
+                                    <input type="text" class="form-control" id="zip" required style="border-color: #e9ecef;">
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Resumo do Pedido -->
+                <div class="card shadow-sm border-0 sticky-top" style="background: #ffffff; border: 1px solid #e9ecef; border-radius: 8px; top: 20px;">
+                    <div class="card-header bg-white border-0 py-3" style="background: #f8f9fa; border-radius: 8px 8px 0 0;">
+                        <h5 class="mb-0 fw-bold" style="color: #000000;">Resumo do Pedido</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span style="color: #666666;">Subtotal:</span>
+                            <span style="color: #000000;">R$ {{ "%.2f"|format(total_price) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span style="color: #666666;">Frete:</span>
+                            <span style="color: #000000;">R$ 10.00</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-4">
+                            <span class="h5 mb-0 fw-bold" style="color: #000000;">Total:</span>
+                            <span class="h5 mb-0 fw-bold" style="color: #d4af37;">R$ {{ "%.2f"|format(total_price + 10) }}</span>
+                        </div>
+                        <button class="btn btn-lg w-100 py-3 fw-bold" id="submit-payment" disabled style="background: #000000; border-color: #000000; color: #ffffff;">
+                            <i class="fas fa-lock me-2"></i>Finalizar Compra
+                        </button>
+                        <p class="text-center text-muted small mt-3 mb-0">
+                            <i class="fas fa-shield-alt me-1"></i>Compra segura e protegida
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://js.stripe.com/v3/"></script>
+<script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id or 'sb' }}&currency=BRL&components=buttons"></script>
+<script>
+// Payment method switching
+document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        const stripeForm = document.getElementById('stripe_payment_form');
+        const paypalForm = document.getElementById('paypal_payment_form');
+        const pixForm = document.getElementById('pix_payment_form');
+        const boletoForm = document.getElementById('boleto_payment_form');
+        const submitBtn = document.getElementById('submit-payment');
+
+        // Hide all forms
+        stripeForm.classList.add('d-none');
+        paypalForm.classList.add('d-none');
+        pixForm.classList.add('d-none');
+        boletoForm.classList.add('d-none');
+
+        // Show selected form
+        if (this.value === 'stripe') {
+            stripeForm.classList.remove('d-none');
+            submitBtn.disabled = !card.complete;
+        } else if (this.value === 'paypal') {
+            paypalForm.classList.remove('d-none');
+            submitBtn.style.display = 'none';
+        } else if (this.value === 'pix') {
+            pixForm.classList.remove('d-none');
+            submitBtn.disabled = false;
+        } else if (this.value === 'boleto') {
+            boletoForm.classList.remove('d-none');
+            submitBtn.disabled = false;
+        }
+    });
+});
+
+// Highlight selected payment option
+function selectPaymentMethod(method) {
+    document.getElementById(method + '_payment').checked = true;
+    document.getElementById(method + '_payment').dispatchEvent(new Event('change'));
+
+    // Remove highlight from all options
+    document.querySelectorAll('.payment-option').forEach(option => {
+        option.style.borderColor = '#e9ecef';
+        option.style.backgroundColor = '';
+    });
+
+    // Add highlight to selected option
+    event.currentTarget.style.borderColor = '#d4af37';
+    event.currentTarget.style.backgroundColor = '#fffbf0';
+}
+
+const stripe = Stripe('{{ stripe_publishable_key }}');
+const elements = stripe.elements();
+
+// Custom styling for Stripe elements
+const style = {
+    base: {
+        color: '#000000',
+        fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+        fontSmoothing: 'antialiased',
+        fontSize: '16px',
+        '::placeholder': {
+            color: '#666666'
+        }
+    },
+    invalid: {
+        color: '#dc3545',
+        iconColor: '#dc3545'
+    }
+};
+
+// Create card element
+const card = elements.create('card', {style: style});
+card.mount('#card-element');
+
+// Handle real-time validation errors
+card.addEventListener('change', function(event) {
+    const displayError = document.getElementById('card-errors');
+    if (event.error) {
+        displayError.textContent = event.error.message;
+    } else {
+        displayError.textContent = '';
+    }
+    // Enable/disable submit button
+    const submitBtn = document.getElementById('submit-payment');
+    const stripeSelected = document.getElementById('stripe_payment').checked;
+    if (stripeSelected) {
+        submitBtn.disabled = !event.complete;
+    }
+});
+
+// PayPal integration
+paypal.Buttons({
+    createOrder: function(data, actions) {
+        return fetch('/api/payment/create-paypal-order', {
+            method: 'post',
+            headers: {
+                'content-type': 'application/json'
+            }
+        }).then(function(res) {
+            return res.json();
+        }).then(function(orderData) {
+            if (orderData.success) {
+                return orderData.paypal_order_id;
+            } else {
+                throw new Error(orderData.error || 'Erro ao criar pedido PayPal');
+            }
+        });
+    },
+    onApprove: function(data, actions) {
+        return fetch('/api/payment/capture-paypal-order', {
+            method: 'post',
+            headers: {
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify({
+                paypal_order_id: data.orderID,
+                shipping: {
+                    name: document.getElementById('name').value,
+                    address: document.getElementById('address').value,
+                    city: document.getElementById('city').value,
+                    state: document.getElementById('state').value,
+                    zip: document.getElementById('zip').value
+                }
+            })
+        }).then(function(res) {
+            return res.json();
+        }).then(function(orderData) {
+            if (orderData.success) {
+                window.location.href = '/pedido/' + orderData.order_id;
+            } else {
+                alert('Erro ao processar pagamento: ' + (orderData.error || 'Erro desconhecido'));
+            }
+        });
+    },
+    onError: function(err) {
+        console.error('PayPal error:', err);
+        alert('Erro no processamento do PayPal. Tente novamente.');
+    }
+}).render('#paypal-button-container');
+
+// Handle form submission
+document.getElementById('submit-payment').addEventListener('click', async function(e) {
+    e.preventDefault();
+
+    const selectedPayment = document.querySelector('input[name="payment_method"]:checked').value;
+
+    if (selectedPayment === 'pix') {
+        // Simulate PIX payment
+        alert('PIX selecionado! Em um projeto real, seria gerado um QR Code aqui.');
+        window.location.href = '/pedido/simulado';
+    } else if (selectedPayment === 'boleto') {
+        // Simulate Boleto payment
+        alert('Boleto selecionado! Em um projeto real, seria gerado um boleto aqui.');
+        window.location.href = '/pedido/simulado';
+    } else if (selectedPayment === 'stripe') {
+        // Handle Stripe payment
+        const btn = this;
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processando...';
+
+        try {
+            // First create payment intent
+            const intentResponse = await fetch('/api/payment/create-intent', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({})
+            });
+
+            const intentData = await intentResponse.json();
+            if (!intentData.success) {
+                throw new Error(intentData.error || 'Erro ao criar intenção de pagamento');
+            }
+
+            // Confirm payment with Stripe
+            const {error, paymentIntent} = await stripe.confirmCardPayment(
+                intentData.client_secret,
+                {
+                    payment_method: {
+                        card: card,
+                        billing_details: {
+                            name: document.getElementById('name').value,
+                            email: document.getElementById('email').value
+                        }
+                    }
+                }
+            );
+
+            if (error) {
+                throw new Error(error.message);
+            }
+
+            // Payment succeeded, now complete the order
+            const checkoutResponse = await fetch('/api/checkout', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    payment_intent_id: paymentIntent.id,
+                    payment_method: 'stripe',
+                    name: document.getElementById('name').value,
+                    email: document.getElementById('email').value,
+                    address: document.getElementById('address').value,
+                    city: document.getElementById('city').value,
+                    state: document.getElementById('state').value,
+                    zip: document.getElementById('zip').value
+                })
+            });
+
+            const checkoutData = await checkoutResponse.json();
+            if (checkoutData.success) {
+                window.location.href = '/pedido/' + checkoutData.order_id;
+            } else {
+                throw new Error(checkoutData.error || 'Erro ao finalizar pedido');
+            }
+
+        } catch (err) {
+            console.error(err);
+            document.getElementById('card-errors').textContent = err.message;
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+});
+</script>
+{% endblock %}
